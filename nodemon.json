@@ -1,0 +1,10 @@
+{
+    "exec":  "ts-node -r source-map-support/register src/local.ts",
+    "watch": [
+        "src/*.ts",
+        "src/**/*.ts",
+        "package.json",
+        "dev.vault.json"
+    ],
+    "ext":   "ts js json"
+}

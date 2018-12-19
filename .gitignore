@@ -1,2 +1,4 @@
 .serverless
 dev.vault.json
+start.sh
+.build

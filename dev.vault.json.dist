@@ -1,0 +1,10 @@
+{
+    "secret/hotline/database": {
+        "host": "127.0.0.1"
+    },
+    "secret/hotline/api/database": {
+        "name":     "api",
+        "user":     "apu",
+        "password": "api"
+    },
+}
