@@ -1,0 +1,37 @@
+{
+    "compileOnSave":   false,
+    "compilerOptions": {
+        "target":                       "es5",
+        "module":                       "commonjs",
+        "jsx":                          "preserve",
+        "allowJs":                      true,
+        "moduleResolution":             "node",
+        "allowSyntheticDefaultImports": true,
+        "removeComments":               false,
+        "preserveConstEnums":           true,
+        "sourceMap":                    true,
+        "skipLibCheck":                 true,
+        "experimentalDecorators":       true,
+        "emitDecoratorMetadata":        true,
+        "noImplicitAny":                false,
+        "pretty":                       true,
+        "strictNullChecks":             true,
+        "outDir":                       ".build",
+        "rootDir":                      "./",
+        "baseUrl":                      ".",
+        "lib":                          [
+            "es2017.object",
+            "es2015",
+            "es2017",
+            "esnext",
+            "dom"
+        ],
+        "typeRoots":                    [
+            "./node_modules/@types"
+        ],
+        "types":                        [
+            "node",
+            "reflect-metadata"
+        ]
+    }
+}
