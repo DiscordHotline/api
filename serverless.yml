@@ -34,37 +34,6 @@ functions:
 
 resources:
     Resources:
-        DynamoDbTable:
-            Type: AWS::DynamoDB::Table
-            Properties:
-                TableName: hotline-apply-session
-                AttributeDefinitions:
-                    -   AttributeName: id
-                        AttributeType: S
-                KeySchema:
-                    -   AttributeName: id
-                        KeyType: HASH
-                ProvisionedThroughput:
-                    ReadCapacityUnits: 5
-                    WriteCapacityUnits: 5
-        DynamoDBIamPolicy:
-            Type: AWS::IAM::Policy
-            DependsOn: DynamoDbTable
-            Properties:
-                Roles: [{Ref: IamRoleLambdaExecution}]
-                PolicyName: lambda-dynamodb
-                PolicyDocument:
-                    Version: '2012-10-17'
-                    Statement:
-                        -   Effect: Allow
-                            Action:
-                                - dynamodb:DescribeTable
-                                - dynamodb:CreateTable
-                                - dynamodb:GetItem
-                                - dynamodb:PutItem
-                                - dynamodb:DeleteItem
-                                - dynamodb:UpdateItem
-                            Resource: arn:aws:dynamodb:us-east-1:452389113878:table/hotline-apply-session
         ApiGatewayPolicy:
             Type: "AWS::IAM::Policy"
             Properties:
