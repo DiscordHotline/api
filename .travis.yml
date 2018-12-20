@@ -6,6 +6,7 @@ node_js:
 sudo: false
 
 install:
+    - npm i -g typescript
     - npm i
 
 script:
