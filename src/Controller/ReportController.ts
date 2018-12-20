@@ -7,7 +7,7 @@ import {
     httpGet,
     httpPost,
     requestBody,
-    requestHeaders,
+    requestHeaders, requestParam,
     results,
 } from 'inversify-express-utils';
 import {Connection} from 'typeorm';
@@ -79,20 +79,21 @@ export class ReportController extends BaseHttpController {
         return this.json(report, 200);
     }
 
-    /**
-     * Accepts: application/json
-     * Body: CreateReport
-     * @param req
-     * @param res
-     * @param next
-     */
     @httpPost('/:id')
     private async edit(
-        req: express.Request,
-        res: express.Response,
-        next: express.NextFunction,
+        @requestParam('id') id: number,
+        @requestBody() req: Partial<EditReport>,
+        @requestHeaders('Authorization') token: string,
     ): Promise<results.JsonResult> {
-        const body = new EditReport(req.body);
+        const authResult = await this.authorizer.isAuthorized(
+            this.json,
+            token,
+            PERMISSIONS.EDIT_REPORTS,
+        );
+        if (!!authResult) {
+            return authResult;
+        }
+        const body = new EditReport(req);
 
         const errors = await validate(body);
         if (errors.length > 0) {
@@ -103,7 +104,7 @@ export class ReportController extends BaseHttpController {
         const userRepository   = this.database.getRepository(User);
         let report;
         try {
-            report = await reportRepository.findOneOrFail(req.params.id);
+            report = await reportRepository.findOneOrFail(id);
         } catch (e) {
             return this.json({message: 'Failed to find report with that id'}, 404);
         }
