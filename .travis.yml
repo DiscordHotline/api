@@ -10,5 +10,5 @@ install:
     - npm i -g typescript ts-lint
 
 script:
-    - tslint -c tslist.json .
+    - tslint .
     - npx serverless deploy --stage prod --verbose --region=us-east-1 --vault-address=${VAULT_ADDR} --vault-role-id=${VAULT_ROLE_ID} --vault-secret-id=${VAULT_SECRET_ID}
