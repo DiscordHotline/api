@@ -64,7 +64,6 @@ export class ReportController extends BaseHttpController {
         report.Reason   = body.Reason;
         report.GuildId  = body.GuildId;
 
-        const promises: Promise<any>[] = [];
         for (const x of body.ReportedUsers) {
             const user = await repo.findOne(x) || new User(x);
             await user.save();
@@ -73,7 +72,6 @@ export class ReportController extends BaseHttpController {
             }
 
             report.ReportedUsers.push(user);
-            promises.push(user.save());
         }
 
         await report.save();
