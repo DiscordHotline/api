@@ -1,6 +1,5 @@
 enum ReportCategoryEnum {
     SPAM = 1,
-    RAID,
     ADVERTISING,
     BIGOTRY,
     ABUSE,
@@ -16,11 +15,6 @@ export const ReportCategories: Array<{ id: ReportCategoryEnum, display: string, 
         description: 'User(s) that are spamming',
     },
     {
-        id:          ReportCategoryEnum.RAID,
-        display:     'Raid',
-        description: 'Users(s) participating in an unfriendly raid',
-    },
-    {
         id:          ReportCategoryEnum.ADVERTISING,
         display:     'Advertising',
         description: 'User(s) sending unsolicited advertisements',
@@ -33,7 +27,7 @@ export const ReportCategories: Array<{ id: ReportCategoryEnum, display: string, 
     {
         id:          ReportCategoryEnum.ABUSE,
         display:     'Abuse',
-        description: 'User(s) that are abusing a system (like a bot)',
+        description: 'User(s) that are abusing a system (like a bot). Note this is NOT a Discord T.o.S. violation.',
     },
     {
         id:          ReportCategoryEnum.TOS_VIOLATION,

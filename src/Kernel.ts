@@ -5,6 +5,8 @@ import {Connection, createConnection} from 'typeorm';
 
 import './Controller/IndexController';
 import './Controller/ReportController';
+import Report from './Entity/Report';
+import User from './Entity/User';
 import Types from './types';
 import {Config, Vault} from './Vault';
 
@@ -44,7 +46,10 @@ export default async () => {
             type:              'mysql',
             supportBigNumbers: true,
             bigNumberStrings:  true,
-            entities:          [],
+            entities:          [
+                Report,
+                User,
+            ],
         });
         container.bind<Connection>(Types.database).toConstantValue(connection);
 

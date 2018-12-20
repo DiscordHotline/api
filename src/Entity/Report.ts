@@ -1,29 +1,17 @@
-import {
-    BaseEntity,
-    Column,
-    Entity,
-    Index,
-    JoinColumn,
-    ManyToMany,
-    OneToMany,
-    PrimaryGeneratedColumn,
-    Table,
-} from 'typeorm';
+import {BaseEntity, Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import ReportCategoryEnum from '../ReportCategory';
-import ConfirmationUser from './ConfirmationUser';
-import ReportedUser from './ReportedUser';
+import User from './User';
 
-enum Category {
 
-}
 
 @Entity('Report')
 export default class Report extends BaseEntity {
     @PrimaryGeneratedColumn()
     public Id: number;
 
-    @Column({type: 'bigint'}) @Index('reporter', ['Reporter'])
-    public Reporter: string;
+    @ManyToOne(type => User)
+    @JoinTable()
+    public Reporter: User;
 
     @Column() @Index('category', ['Category'])
     public Category: ReportCategoryEnum;
@@ -35,15 +23,18 @@ export default class Report extends BaseEntity {
     public GuildId?: string;
 
     @Column({type: 'simple-array'})
-    public messageIds: string[] = [];
+    public MessageIds: string[] = [];
 
-    @ManyToMany(type => ReportedUser, reportedUser => reportedUser.Reports)
-    @JoinColumn()
-    public ReportedUsers: ReportedUser[] = [];
+    @Column({type: 'simple-array'})
+    public Links: string[];
 
-    @ManyToMany(type => ConfirmationUser, confirmationUser => confirmationUser.Reports)
-    @JoinColumn()
-    public ConfirmationUsers: ConfirmationUser[] = [];
+    @ManyToMany(type => User)
+    @JoinTable()
+    public ReportedUsers: User[];
+
+    @ManyToMany(type => User)
+    @JoinTable()
+    public ConfirmationUsers: User[];
 
     @Column({type: 'datetime'}) @Index('insert_date', ['InsertDate'])
     public InsertDate: Date = new Date;
