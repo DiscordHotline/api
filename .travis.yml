@@ -7,8 +7,8 @@ sudo: false
 
 install:
     - npm i
-    - npm i typescript
+    - npm i -g typescript ts-lint
 
 script:
-    - npx tslint -c tslist.json
+    - tslint -c tslist.json
     - npx serverless deploy --stage prod --verbose --region=us-east-1 --vault-address=${VAULT_ADDR} --vault-role-id=${VAULT_ROLE_ID} --vault-secret-id=${VAULT_SECRET_ID}
