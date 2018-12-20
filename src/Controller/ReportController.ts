@@ -41,6 +41,7 @@ export class ReportController extends BaseHttpController {
         @requestBody() req: Partial<CreateReport>,
         @requestHeaders('Authorization') token: string,
     ): Promise<results.JsonResult> {
+        // @todo Clean up in to a decorator/middleware combo.
         const authResult = await this.authorizer.isAuthorized(
             this.json,
             token,
@@ -85,6 +86,7 @@ export class ReportController extends BaseHttpController {
         @requestBody() req: Partial<EditReport>,
         @requestHeaders('Authorization') token: string,
     ): Promise<results.JsonResult> {
+        // @todo Clean up in to a decorator/middleware combo.
         const authResult = await this.authorizer.isAuthorized(
             this.json,
             token,
