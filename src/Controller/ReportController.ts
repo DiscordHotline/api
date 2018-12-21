@@ -90,7 +90,7 @@ export class ReportController extends BaseHttpController {
         const authResult = await this.authorizer.isAuthorized(
             this.json,
             token,
-            PERMISSIONS.EDIT_REPORTS,
+            PERMISSIONS.READ_REPORTS,
         );
         if (!!authResult) {
             return authResult
