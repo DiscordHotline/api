@@ -81,7 +81,32 @@ export class ReportController extends BaseHttpController {
         return this.json(report, 200);
     }
 
+    @httpGet('/:id')
+    private async get (
+        @requestParam('id') id: number,
+        @requestHeaders('Authorization') token: string,
+    ): Promise<results.JsonResult> {
+        // @todo Clean up in to a decorator/middleware combo.
+        const authResult = await this.authorizer.isAuthorized(
+            this.json,
+            token,
+            PERMISSIONS.EDIT_REPORTS,
+        );
+        if (!!authResult) {
+            return authResult
+        }
 
+        const reportRepository = this.database.getRepository(Report)
+        let report
+
+        try {
+            report = await reportRepository.findOneOrFail(id)
+        } catch (e) {
+            return this.json({message: 'Failed to find report with that id'}, 404)
+        }
+
+        return this.json(report, 200)
+    }
 
     @httpPost('/:id')
     private async edit(
