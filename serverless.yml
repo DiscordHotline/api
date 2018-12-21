@@ -1,4 +1,4 @@
-service: hotline-apply
+service: hotline-api
 
 provider:
     name: aws
