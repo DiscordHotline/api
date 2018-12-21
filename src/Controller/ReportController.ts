@@ -9,6 +9,7 @@ import {
     requestBody,
     requestHeaders, requestParam,
     results,
+    httpDelete,
 } from 'inversify-express-utils';
 import {Connection} from 'typeorm';
 
@@ -106,6 +107,41 @@ export class ReportController extends BaseHttpController {
         }
 
         return this.json(report, 200)
+    }
+
+    @httpDelete('/:id')
+    private async delete (
+        @requestParam('id') id: number,
+        @requestHeaders('Authorization') token: string,
+    ): Promise<results.StatusCodeResult> {
+        // @todo Clean up in to a decorator/middleware combo.
+        const authResult = await this.authorizer.isAuthorized(
+            this.json,
+            token,
+            PERMISSIONS.DELETE_REPORTS,
+        );
+        if (!!authResult) {
+            return this.statusCode(403)
+        }
+
+        const reportRepository = this.database.getRepository(Report)
+        let report
+
+        try {
+            report = await reportRepository.findOneOrFail(id)
+        } catch (e) {
+            return this.statusCode(404)
+        }
+
+        try {
+            await report.remove()
+        } catch (e) {
+            // @todo Better logging (Something like Winston)
+            console.error(`Failed delete report ${id}`, e)
+            return this.statusCode(500)
+        }
+         
+        return this.statusCode(204);
     }
 
     @httpPost('/:id')
