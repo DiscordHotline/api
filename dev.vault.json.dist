@@ -4,7 +4,7 @@
     },
     "secret/hotline/api/database": {
         "name":     "api",
-        "user":     "apu",
+        "user":     "api",
         "password": "api"
     },
 }
