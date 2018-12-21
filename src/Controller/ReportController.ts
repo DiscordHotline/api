@@ -64,6 +64,7 @@ export class ReportController extends BaseHttpController {
         report.Category = body.Category;
         report.Reason   = body.Reason;
         report.GuildId  = body.GuildId;
+        report.Links    = body.Links;
 
         for (const x of body.ReportedUsers) {
             const user = await repo.findOne(x) || new User(x);
@@ -79,6 +80,8 @@ export class ReportController extends BaseHttpController {
 
         return this.json(report, 200);
     }
+
+
 
     @httpPost('/:id')
     private async edit(
