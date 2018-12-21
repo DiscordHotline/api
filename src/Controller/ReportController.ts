@@ -10,8 +10,9 @@ import {
     requestHeaders, requestParam,
     results,
     httpDelete,
+    queryParam,
 } from 'inversify-express-utils';
-import {Connection} from 'typeorm';
+import {Connection, In} from 'typeorm';
 
 import Report from '../Entity/Report';
 import User from '../Entity/User';
@@ -82,6 +83,58 @@ export class ReportController extends BaseHttpController {
         return this.json(report, 200);
     }
 
+    @httpGet('/list')
+    private async list (
+        @queryParam('from') from: number,
+        @queryParam('size') size: number,
+        @queryParam('reporter') reporter: string,
+        // @todo Add reported param
+        // @queryParam('reported') reported: string,
+        @requestHeaders('Authorization') token: string,
+    ): Promise<results.JsonResult> {
+        // @todo Clean up in to a decorator/middleware combo.
+        const authResult = await this.authorizer.isAuthorized(
+            this.json,
+            token,
+            PERMISSIONS.READ_REPORTS,
+        )
+        if (!!authResult) {
+            return authResult
+        }
+
+        if (size && size > 50) {
+            return this.json({message: 'Requested size is too big'}, 400)
+        }
+
+        const reportRepository = this.database.getRepository(Report)
+       
+        let reportCount,
+            reports
+
+        try {
+            reportCount = await reportRepository.count()
+            reports = await reportRepository.find({
+                skip: from,
+                take: size || 50,
+                where: {
+                    Reporter: reporter,
+                },
+                order: {
+                    Id: 'DESC'
+                }
+            })
+        } catch (e) {
+            // @todo Better logging (Something like Winston)
+            console.error('Failed to create a report list', e)
+            return this.json({message: 'An error has occurred while fetching reports'}, 500)
+        }
+
+        return this.json({
+            reportCount,
+            reports,
+        }, 200)
+    }
+
     @httpGet('/:id')
     private async get (
         @requestParam('id') id: number,
@@ -92,7 +145,7 @@ export class ReportController extends BaseHttpController {
             this.json,
             token,
             PERMISSIONS.READ_REPORTS,
-        );
+        )
         if (!!authResult) {
             return authResult
         }
