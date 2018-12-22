@@ -107,22 +107,27 @@ export class ReportController extends BaseHttpController {
         }
 
         const reportRepository = this.database.getRepository(Report)
-       
-        let reportCount,
-            reports
 
-        try {
-            reportCount = await reportRepository.count()
-            reports = await reportRepository.find({
+        let reportCount,
+            reports,
+            findOptions: any = {
                 skip: from,
                 take: size || 50,
-                where: {
-                    Reporter: reporter,
-                },
                 order: {
                     Id: 'DESC'
                 }
-            })
+            }
+
+        if (reporter) {
+            findOptions.where = {
+                Reporter: reporter
+            }
+        }
+    
+
+        try {
+            reportCount = await reportRepository.count()
+            reports     = await reportRepository.find(findOptions)
         } catch (e) {
             // @todo Better logging (Something like Winston)
             console.error('Failed to create a report list', e)
