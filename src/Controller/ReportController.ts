@@ -1,5 +1,4 @@
-import {validate} from 'class-validator';
-import {inject} from 'inversify';
+import {inject, tagged} from 'inversify';
 import {
     BaseHttpController,
     controller,
@@ -16,6 +15,10 @@ import {Logger} from 'winston';
 
 import Report from '../Entity/Report';
 import User from '../Entity/User';
+import AbstractManager from '../Manager/AbstractManager';
+import ReportManager from '../Manager/ReportManager';
+import UserManager from '../Manager/UserManager';
+import Validate from '../Middleware/Validate';
 import CreateReport from '../Model/Body/CreateReport';
 import EditReport from '../Model/Body/EditReport';
 import {PERMISSIONS} from '../Permissions';
@@ -29,6 +32,8 @@ export class ReportController extends BaseHttpController {
     public constructor(
         @inject(Types.database) private database: Connection,
         @inject(Types.logger) private logger: Logger,
+        @inject(Types.manager.entity) @tagged('entity', Report) private reportManager: ReportManager,
+        @inject(Types.manager.entity) @tagged('entity', User) private userManager: UserManager,
     ) {
         super();
     }
@@ -38,36 +43,20 @@ export class ReportController extends BaseHttpController {
         return this.json(ReportCategories, 200);
     }
 
-    @httpPost('/', isGranted(PERMISSIONS.WRITE_REPORTS))
-    private async create(@requestBody() req: Partial<CreateReport>): Promise<results.JsonResult> {
-        const body = new CreateReport(req);
-        const repo = this.database.getRepository(User);
+    @httpPost('/', isGranted(PERMISSIONS.WRITE_REPORTS), Validate(CreateReport))
+    private async create(@requestBody() body: CreateReport): Promise<results.JsonResult> {
+        const repo   = this.database.getRepository(User);
+        const report = await this.reportManager.create(async (x) => {
+            x.reporter = await this.userManager.findOneByIdOrCreate(body.Reporter);
+            x.category = body.Category;
+            x.reason   = body.Reason;
+            x.guildId  = body.GuildId;
+            x.links    = body.Links;
 
-        const errors = await validate(body);
-        if (errors.length > 0) {
-            return this.json({message: 'Failed Validation', errors}, 400);
-        }
-
-        const report    = new Report();
-        report.reporter = await repo.findOne(body.Reporter) || new User(body.Reporter);
-        await report.reporter.save();
-
-        report.category = body.Category;
-        report.reason   = body.Reason;
-        report.guildId  = body.GuildId;
-        report.links    = body.Links;
-
-        for (const x of body.ReportedUsers) {
-            const user = await repo.findOne(x) || new User(x);
-            await user.save();
-            if (!report.reportedUsers) {
-                report.reportedUsers = [];
+            for (const id of body.ReportedUsers) {
+                x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(id));
             }
-
-            report.reportedUsers.push(user);
-        }
-
-        await report.save();
+        });
 
         return this.json(report, 200);
     }
@@ -109,22 +98,18 @@ export class ReportController extends BaseHttpController {
 
     @httpGet('/:id', isGranted(PERMISSIONS.READ_REPORTS))
     private async get(@requestParam('id') id: number): Promise<results.JsonResult> {
-        const reportRepository = this.database.getRepository(Report);
-        let report;
-
+        const reportRepository = this.database.getRepository<Report>(Report);
         try {
-            report = await reportRepository.findOneOrFail(id);
+            return this.json(await reportRepository.findOneOrFail(id));
         } catch (e) {
             return this.json({message: 'Failed to find report with that id'}, 404);
         }
-
-        return this.json(report, 200);
     }
 
     @httpDelete('/:id', isGranted(PERMISSIONS.DELETE_REPORTS))
     private async delete(@requestParam('id') id: number): Promise<results.StatusCodeResult> {
-        const reportRepository = this.database.getRepository(Report);
-        let report;
+        const reportRepository = this.database.getRepository<Report>(Report);
+        let report: Report;
 
         try {
             report = await reportRepository.findOneOrFail(id);
@@ -134,51 +119,34 @@ export class ReportController extends BaseHttpController {
 
         try {
             await report.remove();
+
+            return this.statusCode(204);
         } catch (e) {
             this.logger.error(`Failed delete report ${id}: %O`, e);
 
             return this.statusCode(500);
         }
-
-        return this.statusCode(204);
     }
 
-    @httpPost('/:id', isGranted(PERMISSIONS.EDIT_REPORTS))
+    @httpPost('/:id', isGranted(PERMISSIONS.EDIT_REPORTS), Validate(EditReport))
     private async edit(
         @requestParam('id') id: number,
-        @requestBody() req: Partial<EditReport>,
-    ): Promise<results.JsonResult> {
-        const body = new EditReport(req);
-
-        const errors = await validate(body);
-        if (errors.length > 0) {
-            return this.json({message: 'Failed Validation', errors}, 400);
-        }
-
+        @requestBody() body: EditReport,
+    ): Promise<results.JsonResult | results.StatusCodeResult> {
         const reportRepository = this.database.getRepository(Report);
-        const userRepository   = this.database.getRepository(User);
-        let report;
-        try {
-            report = await reportRepository.findOneOrFail(id);
-        } catch (e) {
-            return this.json({message: 'Failed to find report with that id'}, 404);
+        const report           = await reportRepository.findOne(id);
+        if (!report) {
+            return this.statusCode(404);
         }
 
-        report.Category                     = body.Category;
-        report.Reason                       = body.Reason;
-        report.GuildId                      = body.GuildId;
-        const promises: Array<Promise<any>> = [];
-        for (const x of body.ReportedUsers) {
-            const user = await userRepository.findOne(x) || new User(x);
-            if (!report.ReportedUsers) {
-                report.ReportedUsers = [];
+        await this.reportManager.update(report, async (x) => {
+            x.category = body.Category;
+            x.reason   = body.Reason;
+            x.guildId  = body.GuildId;
+            for (const userId of body.ReportedUsers) {
+                x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(userId));
             }
-
-            report.ReportedUsers.push(user);
-            promises.push(user.save());
-        }
-
-        await Promise.all([...promises, report.save()]);
+        });
 
         return this.json(report, 200);
     }

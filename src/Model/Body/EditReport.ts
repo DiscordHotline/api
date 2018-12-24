@@ -1,4 +1,4 @@
-import {IsDefined, IsInt, IsOptional, Length} from 'class-validator';
+import {ArrayMinSize, IsDefined, IsInt, IsOptional, Length} from 'class-validator';
 import ReportCategoryEnum from '../../ReportCategory';
 import AbstractModel from '../AbstractModel';
 
@@ -23,5 +23,6 @@ export default class EditReport extends AbstractModel<EditReport> {
 
     @IsDefined()
     @Length(15, 19, {each: true})
+    @ArrayMinSize(1)
     public ReportedUsers: Snowflake[];
 }

@@ -11,6 +11,9 @@ import './Controller/ReportController';
 import Consumer from './Entity/Consumer';
 import Report from './Entity/Report';
 import User from './Entity/User';
+import AbstractManager from './Manager/AbstractManager';
+import ReportManager from './Manager/ReportManager';
+import UserManager from './Manager/UserManager';
 import {PERMISSIONS} from './Permissions';
 import {default as Authorizer, setAuthorizorForMiddleware} from './Security/Authorizer';
 import Types from './types';
@@ -92,6 +95,13 @@ export default async () => {
         });
         container.bind<Connection>(Types.database).toConstantValue(connection);
         await createRootUser(connection);
+
+        container.bind<AbstractManager<Report>>(Types.manager.entity)
+                 .toDynamicValue((ctx) => new ReportManager(ctx.container.get(Types.database), Report))
+                 .whenTargetTagged('entity', Report);
+        container.bind<AbstractManager<User>>(Types.manager.entity)
+                 .toDynamicValue((ctx) => new UserManager(ctx.container.get(Types.database), User))
+                 .whenTargetTagged('entity', User);
 
         // Authorizer
         container.bind<Authorizer>(Types.authorizer).to(Authorizer);

@@ -9,10 +9,4 @@ export default class User extends BaseEntity {
 
     @Column({type: 'datetime'}) @Index('insert_date', ['insertDate'])
     public insertDate: Date = new Date();
-
-    constructor(id: string) {
-        super();
-
-        this.id = id;
-    }
 }

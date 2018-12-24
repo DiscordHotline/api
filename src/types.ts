@@ -10,6 +10,9 @@ const Types = {
         options: Symbol('discord.options'),
         client:  Symbol('discord.client'),
     },
+    manager:    {
+        entity: Symbol('manager.entity'),
+    },
     logger:     Symbol('logger'),
 };
 
