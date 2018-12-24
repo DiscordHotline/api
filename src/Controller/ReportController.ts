@@ -77,10 +77,9 @@ export class ReportController extends BaseHttpController {
         @queryParam('from') from: number,
         @queryParam('size') size: number,
         @queryParam('reporter') reporter: string,
-        // @todo Add reported param
-        // @queryParam('reported') reported: string,
+        @queryParam('reported') reported: string,
     ): Promise<results.JsonResult> {
-        const reportRepository = this.database.getRepository(Report);
+        const reportRepository = this.database.getRepository<Report>(Report);
         const findOptions: any = {
             skip:  from,
             take:  size || 50,
@@ -96,8 +95,7 @@ export class ReportController extends BaseHttpController {
         }
 
         try {
-            const reportCount = await reportRepository.count();
-            const reports     = await reportRepository.find(findOptions);
+            const [reports, reportCount] = await reportRepository.findAndCount(findOptions);
 
             return this.json({reportCount, reports});
         } catch (e) {

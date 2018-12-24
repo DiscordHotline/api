@@ -2,14 +2,12 @@ import {BaseEntity, Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, Pri
 import ReportCategoryEnum from '../ReportCategory';
 import User from './User';
 
-
-
 @Entity('Report')
 export default class Report extends BaseEntity {
     @PrimaryGeneratedColumn()
     public Id: number;
 
-    @ManyToOne(type => User)
+    @ManyToOne((type) => User, {eager: true})
     @JoinTable()
     public Reporter: User;
 
@@ -28,17 +26,17 @@ export default class Report extends BaseEntity {
     @Column({type: 'simple-array'})
     public Links: string[];
 
-    @ManyToMany(type => User)
+    @ManyToMany((type) => User, {eager: true})
     @JoinTable()
     public ReportedUsers: User[];
 
-    @ManyToMany(type => User)
+    @ManyToMany((type) => User, {eager: true})
     @JoinTable()
     public ConfirmationUsers: User[];
 
     @Column({type: 'datetime'}) @Index('insert_date', ['InsertDate'])
-    public InsertDate: Date = new Date;
+    public InsertDate: Date = new Date();
 
     @Column({type: 'datetime'}) @Index('update_date', ['UpdateDate'])
-    public UpdateDate: Date = new Date;
+    public UpdateDate: Date = new Date();
 }
