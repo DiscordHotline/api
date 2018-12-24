@@ -1,5 +1,6 @@
 import {BaseEntity, Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import ReportCategoryEnum from '../ReportCategory';
+import Tag from './Tag';
 import User from './User';
 
 @Entity('report')
@@ -11,8 +12,9 @@ export default class Report extends BaseEntity {
     @JoinTable()
     public reporter: User;
 
-    @Column() @Index('category', ['category'])
-    public category: ReportCategoryEnum;
+    @ManyToMany((type) => Tag, {eager: true})
+    @JoinTable({name: 'report_tags'})
+    public tags: Tag[];
 
     @Column({type: 'text'})
     public reason: string;

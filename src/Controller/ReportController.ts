@@ -14,8 +14,8 @@ import {Connection} from 'typeorm';
 import {Logger} from 'winston';
 
 import Report from '../Entity/Report';
+import Tag from '../Entity/Tag';
 import User from '../Entity/User';
-import AbstractManager from '../Manager/AbstractManager';
 import ReportManager from '../Manager/ReportManager';
 import UserManager from '../Manager/UserManager';
 import Validate from '../Middleware/Validate';
@@ -45,15 +45,18 @@ export class ReportController extends BaseHttpController {
 
     @httpPost('/', isGranted(PERMISSIONS.WRITE_REPORTS), Validate(CreateReport))
     private async create(@requestBody() body: CreateReport): Promise<results.JsonResult> {
-        const repo   = this.database.getRepository(User);
-        const report = await this.reportManager.create(async (x) => {
-            x.reporter = await this.userManager.findOneByIdOrCreate(body.Reporter);
-            x.category = body.Category;
-            x.reason   = body.Reason;
-            x.guildId  = body.GuildId;
-            x.links    = body.Links;
+        const tagRepo = this.database.getRepository<Tag>(Tag);
+        const report  = await this.reportManager.create(async (x) => {
+            x.reporter = await this.userManager.findOneByIdOrCreate(body.reporter);
+            x.reason   = body.reason;
+            x.guildId  = body.guildId;
+            x.links    = body.links;
 
-            for (const id of body.ReportedUsers) {
+            for (const id of body.tags) {
+                x.tags.push(await tagRepo.findOneOrFail(id));
+            }
+
+            for (const id of body.reportedUsers) {
                 x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(id));
             }
         });
@@ -133,17 +136,22 @@ export class ReportController extends BaseHttpController {
         @requestParam('id') id: number,
         @requestBody() body: EditReport,
     ): Promise<results.JsonResult | results.StatusCodeResult> {
-        const reportRepository = this.database.getRepository(Report);
-        const report           = await reportRepository.findOne(id);
+        const reportRepo = this.database.getRepository<Report>(Report);
+        const tagRepo    = this.database.getRepository<Tag>(Tag);
+        const report     = await reportRepo.findOne(id);
         if (!report) {
             return this.statusCode(404);
         }
 
         await this.reportManager.update(report, async (x) => {
-            x.category = body.Category;
-            x.reason   = body.Reason;
-            x.guildId  = body.GuildId;
-            for (const userId of body.ReportedUsers) {
+            x.reason  = body.reason;
+            x.guildId = body.guildId;
+
+            for (const tagId of body.tags) {
+                x.tags.push(await tagRepo.findOneOrFail(tagId));
+            }
+
+            for (const userId of body.reportedUsers) {
                 x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(userId));
             }
         });

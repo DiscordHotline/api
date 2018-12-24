@@ -10,6 +10,7 @@ import './Controller/IndexController';
 import './Controller/ReportController';
 import Consumer from './Entity/Consumer';
 import Report from './Entity/Report';
+import Tag from './Entity/Tag';
 import User from './Entity/User';
 import AbstractManager from './Manager/AbstractManager';
 import ReportManager from './Manager/ReportManager';
@@ -90,6 +91,7 @@ export default async () => {
             entities:          [
                 Consumer,
                 Report,
+                Tag,
                 User,
             ],
         });
