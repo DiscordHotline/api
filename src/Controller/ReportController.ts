@@ -1,5 +1,4 @@
 import {validate} from 'class-validator';
-import * as express from 'express';
 import {inject} from 'inversify';
 import {
     BaseHttpController,
@@ -9,7 +8,6 @@ import {
     httpPost,
     queryParam,
     requestBody,
-    requestHeaders,
     requestParam,
     results,
 } from 'inversify-express-utils';
@@ -36,13 +34,12 @@ export class ReportController extends BaseHttpController {
     }
 
     @httpGet('/categories')
-    private index(req: express.Request, res: express.Response, next: express.NextFunction): results.JsonResult {
+    private index(): results.JsonResult {
         return this.json(ReportCategories, 200);
     }
 
     @httpPost('/', isGranted(PERMISSIONS.WRITE_REPORTS))
     private async create(@requestBody() req: Partial<CreateReport>): Promise<results.JsonResult> {
-        // @todo Clean up in to a decorator/middleware combo.
         const body = new CreateReport(req);
         const repo = this.database.getRepository(User);
 
@@ -84,16 +81,13 @@ export class ReportController extends BaseHttpController {
         // @queryParam('reported') reported: string,
     ): Promise<results.JsonResult> {
         const reportRepository = this.database.getRepository(Report);
-
-        let reportCount,
-            reports,
-            findOptions: any = {
-                skip:  from,
-                take:  size || 50,
-                order: {
-                    Id: 'DESC',
-                },
-            };
+        const findOptions: any = {
+            skip:  from,
+            take:  size || 50,
+            order: {
+                Id: 'DESC',
+            },
+        };
 
         if (reporter) {
             findOptions.where = {
@@ -102,16 +96,15 @@ export class ReportController extends BaseHttpController {
         }
 
         try {
-            reportCount = await reportRepository.count();
-            reports     = await reportRepository.find(findOptions);
+            const reportCount = await reportRepository.count();
+            const reports     = await reportRepository.find(findOptions);
+
+            return this.json({reportCount, reports});
         } catch (e) {
-            // @todo Better logging (Something like Winston)
             this.logger.error('Failed to create a report list: %O', e);
 
             return this.json({message: 'An error has occurred while fetching reports'}, 500);
         }
-
-        return this.json({reportCount, reports});
     }
 
     @httpGet('/:id', isGranted(PERMISSIONS.READ_REPORTS))
@@ -142,8 +135,8 @@ export class ReportController extends BaseHttpController {
         try {
             await report.remove();
         } catch (e) {
-            // @todo Better logging (Something like Winston)
             this.logger.error(`Failed delete report ${id}: %O`, e);
+
             return this.statusCode(500);
         }
 
@@ -171,10 +164,10 @@ export class ReportController extends BaseHttpController {
             return this.json({message: 'Failed to find report with that id'}, 404);
         }
 
-        report.Category                = body.Category;
-        report.Reason                  = body.Reason;
-        report.GuildId                 = body.GuildId;
-        const promises: Promise<any>[] = [];
+        report.Category                     = body.Category;
+        report.Reason                       = body.Reason;
+        report.GuildId                      = body.GuildId;
+        const promises: Array<Promise<any>> = [];
         for (const x of body.ReportedUsers) {
             const user = await userRepository.findOne(x) || new User(x);
             if (!report.ReportedUsers) {
