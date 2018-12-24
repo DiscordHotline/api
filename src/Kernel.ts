@@ -28,18 +28,18 @@ server.setConfig((app) => {
     app.use(morgan('dev'));
 });
 
-async function createRootUser(connection: Connection) {
-    const repo       = connection.getRepository<Consumer>(Consumer);
-    let rootConsumer = await repo.findOne({Name: 'root'});
+async function createRootUser(_conn: Connection) {
+    const repo       = _conn.getRepository<Consumer>(Consumer);
+    let rootConsumer = await repo.findOne({name: 'root'});
     if (!!rootConsumer) {
         return;
     }
 
     rootConsumer             = new Consumer();
-    rootConsumer.Name        = 'root';
-    rootConsumer.Description = 'Root Consumer - Admin User';
-    rootConsumer.Permissions = PERMISSIONS.ADMINISTRATOR;
-    rootConsumer.ApiKey      = apikey(64);
+    rootConsumer.name        = 'root';
+    rootConsumer.description = 'Root Consumer - Admin User';
+    rootConsumer.permissions = PERMISSIONS.ADMINISTRATOR;
+    rootConsumer.apiKey      = apikey(64);
 
     return rootConsumer.save();
 }
@@ -101,4 +101,4 @@ export default async () => {
     }
 
     return server.build();
-}
+};

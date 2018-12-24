@@ -2,41 +2,41 @@ import {BaseEntity, Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, Pri
 import ReportCategoryEnum from '../ReportCategory';
 import User from './User';
 
-@Entity('Report')
+@Entity('report')
 export default class Report extends BaseEntity {
     @PrimaryGeneratedColumn()
-    public Id: number;
+    public id: number;
 
     @ManyToOne((type) => User, {eager: true})
     @JoinTable()
-    public Reporter: User;
+    public reporter: User;
 
-    @Column() @Index('category', ['Category'])
-    public Category: ReportCategoryEnum;
+    @Column() @Index('category', ['category'])
+    public category: ReportCategoryEnum;
 
     @Column({type: 'text'})
-    public Reason: string;
+    public reason: string;
 
-    @Column({type: 'bigint'}) @Index('guild', ['GuildId'])
-    public GuildId?: string;
-
-    @Column({type: 'simple-array'})
-    public MessageIds: string[] = [];
+    @Column({type: 'bigint', nullable: true}) @Index('guild', ['guildId'])
+    public guildId?: string;
 
     @Column({type: 'simple-array'})
-    public Links: string[];
+    public messageIds: string[] = [];
+
+    @Column({type: 'simple-array'})
+    public links: string[];
 
     @ManyToMany((type) => User, {eager: true})
-    @JoinTable()
-    public ReportedUsers: User[];
+    @JoinTable({name: 'reported_users'})
+    public reportedUsers: User[];
 
     @ManyToMany((type) => User, {eager: true})
-    @JoinTable()
-    public ConfirmationUsers: User[];
+    @JoinTable({name: 'confirmation_users'})
+    public confirmationUsers: User[];
 
-    @Column({type: 'datetime'}) @Index('insert_date', ['InsertDate'])
-    public InsertDate: Date = new Date();
+    @Column({type: 'datetime'}) @Index('insert_date', ['insertDate'])
+    public insertDate: Date = new Date();
 
-    @Column({type: 'datetime'}) @Index('update_date', ['UpdateDate'])
-    public UpdateDate: Date = new Date();
+    @Column({type: 'datetime'}) @Index('update_date', ['updateDate'])
+    public updateDate: Date = new Date();
 }

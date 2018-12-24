@@ -9,7 +9,7 @@ export const PERMISSIONS = {
     LIST_REPORTS:   1 << 4,
 
     /**
-     * Consumer Related Permissions
+     * Consumer Related permissions
      */
     READ_CONSUMERS:   1 << 10,
     WRITE_CONSUMERS:  1 << 11,

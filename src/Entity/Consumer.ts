@@ -1,22 +1,22 @@
 import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
 
-@Entity('Consumer')
+@Entity('consumer')
 export default class Consumer extends BaseEntity {
     @PrimaryGeneratedColumn()
-    public Id: string;
+    public id: string;
 
-    @Column() @Index('name', ['Name'])
-    public Name: string;
+    @Column() @Index('name', ['name'])
+    public name: string;
 
     @Column({type: 'text', nullable: true})
-    public Description: string;
+    public description: string;
 
-    @Column() @Index('api_key', ['ApiKey'])
-    public ApiKey: string;
+    @Column() @Index('api_key', ['apiKey'])
+    public apiKey: string;
 
     @Column()
-    public Permissions: number = 0;
+    public permissions: number = 0;
 
-    @Column({type: 'datetime'}) @Index('insert_date', ['InsertDate'])
-    public InsertDate: Date = new Date;
+    @Column({type: 'datetime'}) @Index('insert_date', ['insertDate'])
+    public insertDate: Date = new Date();
 }

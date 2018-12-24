@@ -29,13 +29,13 @@ export default class Authorizer {
         }
         token = token.replace('Bearer ', '');
 
-        const consumer = await this.repository.findOne({ApiKey: token});
+        const consumer = await this.repository.findOne({apiKey: token});
         if (!consumer) {
             return {passed: false, reason: 'Bad API Key', code: 401};
         }
 
         for (const perm of permissions) {
-            if (!hasPermission(perm, consumer.Permissions)) {
+            if (!hasPermission(perm, consumer.permissions)) {
                 return {passed: false, reason: 'Forbidden', code: 403};
             }
         }

@@ -49,22 +49,22 @@ export class ReportController extends BaseHttpController {
         }
 
         const report    = new Report();
-        report.Reporter = await repo.findOne(body.Reporter) || new User(body.Reporter);
-        await report.Reporter.save();
+        report.reporter = await repo.findOne(body.Reporter) || new User(body.Reporter);
+        await report.reporter.save();
 
-        report.Category = body.Category;
-        report.Reason   = body.Reason;
-        report.GuildId  = body.GuildId;
-        report.Links    = body.Links;
+        report.category = body.Category;
+        report.reason   = body.Reason;
+        report.guildId  = body.GuildId;
+        report.links    = body.Links;
 
         for (const x of body.ReportedUsers) {
             const user = await repo.findOne(x) || new User(x);
             await user.save();
-            if (!report.ReportedUsers) {
-                report.ReportedUsers = [];
+            if (!report.reportedUsers) {
+                report.reportedUsers = [];
             }
 
-            report.ReportedUsers.push(user);
+            report.reportedUsers.push(user);
         }
 
         await report.save();
@@ -72,32 +72,34 @@ export class ReportController extends BaseHttpController {
         return this.json(report, 200);
     }
 
-    @httpGet('/list', isGranted(PERMISSIONS.LIST_REPORTS))
+    @httpGet('/', isGranted(PERMISSIONS.LIST_REPORTS))
     private async list(
         @queryParam('from') from: number,
         @queryParam('size') size: number,
         @queryParam('reporter') reporter: string,
         @queryParam('reported') reported: string,
     ): Promise<results.JsonResult> {
-        const reportRepository = this.database.getRepository<Report>(Report);
-        const findOptions: any = {
-            skip:  from,
-            take:  size || 50,
-            order: {
-                Id: 'DESC',
-            },
-        };
+        const repo = this.database.getRepository<Report>(Report);
+        const qb   = repo.createQueryBuilder('report')
+                         .innerJoinAndSelect('report.reporter', 'reporter')
+                         .leftJoinAndSelect('report.reportedUsers', 'reportedUsers')
+                         .leftJoinAndSelect('report.confirmationUsers', 'confirmationUsers')
+                         .skip(from)
+                         .take(size || 50)
+                         .orderBy('report.id', 'DESC');
 
         if (reporter) {
-            findOptions.where = {
-                Reporter: reporter,
-            };
+            qb.andWhere('report.reporter = :reporter', {reporter});
+        }
+
+        if (reported) {
+            qb.andWhere('reportedUsers.id = :reported', {reported});
         }
 
         try {
-            const [reports, reportCount] = await reportRepository.findAndCount(findOptions);
+            const [results, count] = await qb.getManyAndCount();
 
-            return this.json({reportCount, reports});
+            return this.json({count, results});
         } catch (e) {
             this.logger.error('Failed to create a report list: %O', e);
 
