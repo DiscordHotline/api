@@ -7,6 +7,7 @@ import AbstractManager from './AbstractManager';
 export default class ReportManager extends AbstractManager<Report> {
     protected createInstance(): Report {
         const instance             = new Report();
+        instance.tags              = [];
         instance.reportedUsers     = [];
         instance.confirmationUsers = [];
 
