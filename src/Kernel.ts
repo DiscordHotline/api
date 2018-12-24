@@ -1,8 +1,10 @@
+import {apikey} from 'apikeygen';
 import * as bodyParser from 'body-parser';
 import {Container} from 'inversify';
 import {InversifyExpressServer} from 'inversify-express-utils';
+import * as morgan from 'morgan';
 import {Connection, createConnection} from 'typeorm';
-import {apikey} from 'apikeygen';
+import {createLogger, format, Logger, transports} from 'winston';
 
 import './Controller/IndexController';
 import './Controller/ReportController';
@@ -10,7 +12,7 @@ import Consumer from './Entity/Consumer';
 import Report from './Entity/Report';
 import User from './Entity/User';
 import {PERMISSIONS} from './Permissions';
-import Authorizer from './Security/Authorizer';
+import {default as Authorizer, setAuthorizorForMiddleware} from './Security/Authorizer';
 import Types from './types';
 import {Config, Vault} from './Vault';
 
@@ -23,26 +25,42 @@ let connection: Connection;
 server.setConfig((app) => {
     app.use(bodyParser.urlencoded({extended: true}));
     app.use(bodyParser.json());
+    app.use(morgan('dev'));
 });
 
 async function createRootUser(connection: Connection) {
-    const repo = connection.getRepository<Consumer>(Consumer);
+    const repo       = connection.getRepository<Consumer>(Consumer);
     let rootConsumer = await repo.findOne({Name: 'root'});
     if (!!rootConsumer) {
         return;
     }
 
-    rootConsumer = new Consumer();
-    rootConsumer.Name = 'root';
+    rootConsumer             = new Consumer();
+    rootConsumer.Name        = 'root';
     rootConsumer.Description = 'Root Consumer - Admin User';
     rootConsumer.Permissions = PERMISSIONS.ADMINISTRATOR;
-    rootConsumer.ApiKey = apikey(64);
+    rootConsumer.ApiKey      = apikey(64);
 
     return rootConsumer.save();
 }
 
 export default async () => {
     if (!initialized) {
+        // Logger
+        container.bind<Logger>(Types.logger).toDynamicValue(() => createLogger({
+            level:      process.env.DEBUG || false ? 'debug' : 'info',
+            format:     format.combine(
+                format.splat(),
+                format.colorize(),
+                format.timestamp(),
+                format.align(),
+                format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`),
+            ),
+            transports: [
+                new transports.Console(),
+            ],
+        }));
+
         // Vault
         container.bind<Config>(Types.vault.config).toConstantValue({
             vaultFile: process.env.VAULT_FILE,
@@ -77,6 +95,7 @@ export default async () => {
 
         // Authorizer
         container.bind<Authorizer>(Types.authorizer).to(Authorizer);
+        setAuthorizorForMiddleware(container.get<Authorizer>(Types.authorizer));
 
         initialized = true;
     }

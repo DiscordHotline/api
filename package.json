@@ -21,7 +21,8 @@
         "reflect-metadata": "^0.1.12",
         "request": "^2.88.0",
         "serverless-http": "^1.8.0",
-        "typeorm": "^0.2.9"
+        "typeorm": "^0.2.9",
+        "winston": "^3.1.0"
     },
     "devDependencies": {
         "@types/express": "^4.16.0",

@@ -4,15 +4,17 @@ import {inject} from 'inversify';
 import {
     BaseHttpController,
     controller,
+    httpDelete,
     httpGet,
     httpPost,
-    requestBody,
-    requestHeaders, requestParam,
-    results,
-    httpDelete,
     queryParam,
+    requestBody,
+    requestHeaders,
+    requestParam,
+    results,
 } from 'inversify-express-utils';
-import {Connection, In} from 'typeorm';
+import {Connection} from 'typeorm';
+import {Logger} from 'winston';
 
 import Report from '../Entity/Report';
 import User from '../Entity/User';
@@ -20,7 +22,7 @@ import CreateReport from '../Model/Body/CreateReport';
 import EditReport from '../Model/Body/EditReport';
 import {PERMISSIONS} from '../Permissions';
 import {ReportCategories} from '../ReportCategory';
-import Authorizer from '../Security/Authorizer';
+import {isGranted} from '../Security/Authorizer';
 
 import Types from '../types';
 
@@ -28,7 +30,7 @@ import Types from '../types';
 export class ReportController extends BaseHttpController {
     public constructor(
         @inject(Types.database) private database: Connection,
-        @inject(Types.authorizer) private authorizer: Authorizer,
+        @inject(Types.logger) private logger: Logger,
     ) {
         super();
     }
@@ -38,21 +40,9 @@ export class ReportController extends BaseHttpController {
         return this.json(ReportCategories, 200);
     }
 
-    @httpPost('/')
-    private async create(
-        @requestBody() req: Partial<CreateReport>,
-        @requestHeaders('Authorization') token: string,
-    ): Promise<results.JsonResult> {
+    @httpPost('/', isGranted(PERMISSIONS.WRITE_REPORTS))
+    private async create(@requestBody() req: Partial<CreateReport>): Promise<results.JsonResult> {
         // @todo Clean up in to a decorator/middleware combo.
-        const authResult = await this.authorizer.isAuthorized(
-            this.json,
-            token,
-            PERMISSIONS.WRITE_REPORTS,
-        );
-        if (!!authResult) {
-            return authResult;
-        }
-
         const body = new CreateReport(req);
         const repo = this.database.getRepository(User);
 
@@ -63,6 +53,8 @@ export class ReportController extends BaseHttpController {
 
         const report    = new Report();
         report.Reporter = await repo.findOne(body.Reporter) || new User(body.Reporter);
+        await report.Reporter.save();
+
         report.Category = body.Category;
         report.Reason   = body.Reason;
         report.GuildId  = body.GuildId;
@@ -83,140 +75,86 @@ export class ReportController extends BaseHttpController {
         return this.json(report, 200);
     }
 
-    @httpGet('/list')
-    private async list (
+    @httpGet('/list', isGranted(PERMISSIONS.LIST_REPORTS))
+    private async list(
         @queryParam('from') from: number,
         @queryParam('size') size: number,
         @queryParam('reporter') reporter: string,
         // @todo Add reported param
         // @queryParam('reported') reported: string,
-        @requestHeaders('Authorization') token: string,
     ): Promise<results.JsonResult> {
-        // @todo Clean up in to a decorator/middleware combo.
-        const authResult = await this.authorizer.isAuthorized(
-            this.json,
-            token,
-            PERMISSIONS.READ_REPORTS,
-        )
-        if (!!authResult) {
-            return authResult
-        }
-
-        if (size && size > 50) {
-            return this.json({message: 'Requested size is too big'}, 400)
-        }
-
-        const reportRepository = this.database.getRepository(Report)
+        const reportRepository = this.database.getRepository(Report);
 
         let reportCount,
             reports,
             findOptions: any = {
-                skip: from,
-                take: size || 50,
+                skip:  from,
+                take:  size || 50,
                 order: {
-                    Id: 'DESC'
-                }
-            }
+                    Id: 'DESC',
+                },
+            };
 
         if (reporter) {
             findOptions.where = {
-                Reporter: reporter
-            }
+                Reporter: reporter,
+            };
         }
-    
 
         try {
-            reportCount = await reportRepository.count()
-            reports     = await reportRepository.find(findOptions)
+            reportCount = await reportRepository.count();
+            reports     = await reportRepository.find(findOptions);
         } catch (e) {
             // @todo Better logging (Something like Winston)
-            console.error('Failed to create a report list', e)
-            return this.json({message: 'An error has occurred while fetching reports'}, 500)
+            this.logger.error('Failed to create a report list: %O', e);
+
+            return this.json({message: 'An error has occurred while fetching reports'}, 500);
         }
 
-        return this.json({
-            reportCount,
-            reports,
-        }, 200)
+        return this.json({reportCount, reports});
     }
 
-    @httpGet('/:id')
-    private async get (
-        @requestParam('id') id: number,
-        @requestHeaders('Authorization') token: string,
-    ): Promise<results.JsonResult> {
-        // @todo Clean up in to a decorator/middleware combo.
-        const authResult = await this.authorizer.isAuthorized(
-            this.json,
-            token,
-            PERMISSIONS.READ_REPORTS,
-        )
-        if (!!authResult) {
-            return authResult
-        }
-
-        const reportRepository = this.database.getRepository(Report)
-        let report
+    @httpGet('/:id', isGranted(PERMISSIONS.READ_REPORTS))
+    private async get(@requestParam('id') id: number): Promise<results.JsonResult> {
+        const reportRepository = this.database.getRepository(Report);
+        let report;
 
         try {
-            report = await reportRepository.findOneOrFail(id)
+            report = await reportRepository.findOneOrFail(id);
         } catch (e) {
-            return this.json({message: 'Failed to find report with that id'}, 404)
+            return this.json({message: 'Failed to find report with that id'}, 404);
         }
 
-        return this.json(report, 200)
+        return this.json(report, 200);
     }
 
-    @httpDelete('/:id')
-    private async delete (
-        @requestParam('id') id: number,
-        @requestHeaders('Authorization') token: string,
-    ): Promise<results.StatusCodeResult> {
-        // @todo Clean up in to a decorator/middleware combo.
-        const authResult = await this.authorizer.isAuthorized(
-            this.json,
-            token,
-            PERMISSIONS.DELETE_REPORTS,
-        );
-        if (!!authResult) {
-            return this.statusCode(403)
-        }
-
-        const reportRepository = this.database.getRepository(Report)
-        let report
+    @httpDelete('/:id', isGranted(PERMISSIONS.DELETE_REPORTS))
+    private async delete(@requestParam('id') id: number): Promise<results.StatusCodeResult> {
+        const reportRepository = this.database.getRepository(Report);
+        let report;
 
         try {
-            report = await reportRepository.findOneOrFail(id)
+            report = await reportRepository.findOneOrFail(id);
         } catch (e) {
-            return this.statusCode(404)
+            return this.statusCode(404);
         }
 
         try {
-            await report.remove()
+            await report.remove();
         } catch (e) {
             // @todo Better logging (Something like Winston)
-            console.error(`Failed delete report ${id}`, e)
-            return this.statusCode(500)
+            this.logger.error(`Failed delete report ${id}: %O`, e);
+            return this.statusCode(500);
         }
-         
+
         return this.statusCode(204);
     }
 
-    @httpPost('/:id')
+    @httpPost('/:id', isGranted(PERMISSIONS.EDIT_REPORTS))
     private async edit(
         @requestParam('id') id: number,
         @requestBody() req: Partial<EditReport>,
-        @requestHeaders('Authorization') token: string,
     ): Promise<results.JsonResult> {
-        // @todo Clean up in to a decorator/middleware combo.
-        const authResult = await this.authorizer.isAuthorized(
-            this.json,
-            token,
-            PERMISSIONS.EDIT_REPORTS,
-        );
-        if (!!authResult) {
-            return authResult;
-        }
         const body = new EditReport(req);
 
         const errors = await validate(body);
@@ -251,5 +189,4 @@ export class ReportController extends BaseHttpController {
 
         return this.json(report, 200);
     }
-
 }

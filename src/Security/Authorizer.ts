@@ -1,11 +1,16 @@
 import {inject, injectable} from 'inversify';
-import {results} from 'inversify-express-utils';
 import {Connection, Repository} from 'typeorm';
 
 import Consumer from '../Entity/Consumer';
 import {hasPermission} from '../Permissions';
 
 import Types from '../types';
+
+export interface AuthResult {
+    passed: boolean;
+    reason?: string;
+    code?: number;
+}
 
 @injectable()
 export default class Authorizer {
@@ -16,26 +21,37 @@ export default class Authorizer {
     }
 
     public async isAuthorized(
-        json: (content: any, statusCode?: number) => results.JsonResult,
         token: string | undefined,
         ...permissions: number[]
-    ): Promise<results.JsonResult | null> {
+    ): Promise<AuthResult> {
         if (!token) {
-            return json({message: 'Unauthorized'}, 401);
+            return {passed: false, reason: 'Unauthorized', code: 401};
         }
         token = token.replace('Bearer ', '');
 
         const consumer = await this.repository.findOne({ApiKey: token});
         if (!consumer) {
-            return json({message: 'Bad API Key'}, 401);
+            return {passed: false, reason: 'Bad API Key', code: 401};
         }
 
         for (const perm of permissions) {
             if (!hasPermission(perm, consumer.Permissions)) {
-                return json({message: 'Forbidden'}, 403);
+                return {passed: false, reason: 'Forbidden', code: 403};
             }
         }
 
-        return null;
+        return {passed: true};
     }
 }
+
+let authorizer: Authorizer;
+export const setAuthorizorForMiddleware = (_authorizer: Authorizer) => authorizer = _authorizer;
+
+export const isGranted = (...permissions: number[]) => async (req, res, next): Promise<any> => {
+    const authResult = await authorizer.isAuthorized(req.get('Authorization'), ...permissions);
+    if (authResult.passed) {
+        return next();
+    }
+
+    return res.status(authResult.code).json({message: authResult.reason});
+};
