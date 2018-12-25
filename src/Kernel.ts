@@ -22,6 +22,7 @@ import Types from './types';
 import {Config, Vault} from './Vault';
 
 try {
+    console.log(readdirSync(__dirname))
     readdirSync(resolve(__dirname, 'Controller')).forEach((x) => {
         const file = resolve(__dirname, 'Controller', x.replace(/\.[jt]s$/, ''));
         console.log('Loading: ' + file);
