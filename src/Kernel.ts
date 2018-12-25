@@ -8,8 +8,6 @@ import {resolve} from 'path';
 import {Connection, createConnection} from 'typeorm';
 import {createLogger, format, Logger, transports} from 'winston';
 
-readdirSync(resolve(__dirname, 'Controller')).forEach((x) => require(resolve(__dirname, 'Controller', x)));
-
 import Consumer from './Entity/Consumer';
 import Report from './Entity/Report';
 import Tag from './Entity/Tag';
@@ -22,6 +20,18 @@ import {PERMISSIONS} from './Permissions';
 import {default as Authorizer, setAuthorizorForMiddleware} from './Security/Authorizer';
 import Types from './types';
 import {Config, Vault} from './Vault';
+
+try {
+    readdirSync(resolve(__dirname, 'Controller')).forEach((x) => {
+        const file = resolve(__dirname, 'Controller', x.replace(/\.[jt]s$/, ''));
+        console.log('Loading: ' + file);
+        require(file);
+    });
+} catch (e) {
+    console.error(e);
+
+    throw e;
+}
 
 let initialized          = false;
 let container: Container = new Container({defaultScope: 'Singleton'});
