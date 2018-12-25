@@ -1,19 +1,22 @@
 import {apikey} from 'apikeygen';
 import * as bodyParser from 'body-parser';
+import {readdirSync} from 'fs';
 import {Container} from 'inversify';
 import {InversifyExpressServer} from 'inversify-express-utils';
 import * as morgan from 'morgan';
+import {resolve} from 'path';
 import {Connection, createConnection} from 'typeorm';
 import {createLogger, format, Logger, transports} from 'winston';
 
-import './Controller/IndexController';
-import './Controller/ReportController';
+readdirSync(resolve(__dirname, 'Controller')).forEach((x) => require(resolve(__dirname, 'Controller', x)));
+
 import Consumer from './Entity/Consumer';
 import Report from './Entity/Report';
 import Tag from './Entity/Tag';
 import User from './Entity/User';
 import AbstractManager from './Manager/AbstractManager';
 import ReportManager from './Manager/ReportManager';
+import TagManager from './Manager/TagManager';
 import UserManager from './Manager/UserManager';
 import {PERMISSIONS} from './Permissions';
 import {default as Authorizer, setAuthorizorForMiddleware} from './Security/Authorizer';
@@ -104,6 +107,9 @@ export default async () => {
         container.bind<AbstractManager<User>>(Types.manager.entity)
                  .toDynamicValue((ctx) => new UserManager(ctx.container.get(Types.database), User))
                  .whenTargetTagged('entity', User);
+        container.bind<AbstractManager<Tag>>(Types.manager.entity)
+                 .toDynamicValue((ctx) => new TagManager(ctx.container.get(Types.database), Tag))
+                 .whenTargetTagged('entity', Tag);
 
         // Authorizer
         container.bind<Authorizer>(Types.authorizer).to(Authorizer);

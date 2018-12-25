@@ -66,10 +66,10 @@ export class ReportController extends BaseHttpController {
 
     @httpGet('/', isGranted(PERMISSIONS.LIST_REPORTS))
     private async list(
-        @queryParam('from') from: number,
-        @queryParam('size') size: number,
-        @queryParam('reporter') reporter: string,
-        @queryParam('reported') reported: string,
+        @queryParam('from') from: number = 0,
+        @queryParam('size') size: number = 50,
+        @queryParam('reporter') reporter?: string,
+        @queryParam('reported') reported?: string,
     ): Promise<results.JsonResult> {
         const repo = this.database.getRepository<Report>(Report);
         const qb   = repo.createQueryBuilder('report')
@@ -77,7 +77,7 @@ export class ReportController extends BaseHttpController {
                          .leftJoinAndSelect('report.reportedUsers', 'reportedUsers')
                          .leftJoinAndSelect('report.confirmationUsers', 'confirmationUsers')
                          .skip(from)
-                         .take(size || 50)
+                         .take(size)
                          .orderBy('report.id', 'DESC');
 
         if (reporter) {
@@ -138,12 +138,12 @@ export class ReportController extends BaseHttpController {
     ): Promise<results.JsonResult | results.StatusCodeResult> {
         const reportRepo = this.database.getRepository<Report>(Report);
         const tagRepo    = this.database.getRepository<Tag>(Tag);
-        const report     = await reportRepo.findOne(id);
+        let report       = await reportRepo.findOne(id);
         if (!report) {
             return this.statusCode(404);
         }
 
-        await this.reportManager.update(report, async (x) => {
+        report = await this.reportManager.update(report, async (x) => {
             x.reason  = body.reason;
             x.guildId = body.guildId;
 

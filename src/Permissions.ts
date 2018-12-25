@@ -18,9 +18,18 @@ export const PERMISSIONS = {
     LIST_CONSUMERS:   1 << 14,
 
     /**
+     * Tag Related permissions
+     */
+    READ_TAGS:   1 << 15,
+    WRITE_TAGS:  1 << 16,
+    EDIT_TAGS:   1 << 17,
+    DELETE_TAGS: 1 << 18,
+    LIST_TAGS:   1 << 19,
+
+    /**
      * Miscellaneous Perms
      */
-    ADMINISTRATOR: 0 // Calculated Below
+    ADMINISTRATOR: 0, // Calculated Below
 };
 
 export const calculatePermissions = (...permissions) => {
