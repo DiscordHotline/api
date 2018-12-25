@@ -21,18 +21,7 @@ import {default as Authorizer, setAuthorizorForMiddleware} from './Security/Auth
 import Types from './types';
 import {Config, Vault} from './Vault';
 
-try {
-    console.log(readdirSync(__dirname))
-    readdirSync(resolve(__dirname, 'Controller')).forEach((x) => {
-        const file = resolve(__dirname, 'Controller', x.replace(/\.[jt]s$/, ''));
-        console.log('Loading: ' + file);
-        require(file);
-    });
-} catch (e) {
-    console.error(e);
-
-    throw e;
-}
+import './Controller';
 
 let initialized          = false;
 let container: Container = new Container({defaultScope: 'Singleton'});
