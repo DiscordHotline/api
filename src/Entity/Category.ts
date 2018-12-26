@@ -1,23 +1,17 @@
-import {
-    BaseEntity,
-    Column,
-    Entity,
-    Index, JoinTable,
-    ManyToOne,
-    PrimaryGeneratedColumn,
-} from 'typeorm';
-import Category from './Category';
+import {BaseEntity, Column, Entity, Index, JoinTable, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
 
-@Entity('tag')
-export default class Tag extends BaseEntity {
+import Tag from './Tag';
+
+@Entity('category')
+export default class Category extends BaseEntity {
     @PrimaryGeneratedColumn()
     public id: number;
 
     @Column({type: 'varchar', length: '32'})
     public name: string;
 
-    @ManyToOne((type) => Category, (category) => category.tags)
-    public category: Category;
+    @OneToMany((type) => Tag, (tag) => tag.category)
+    public tags: Tag[];
 
     @Column({type: 'datetime'}) @Index('insert_date', ['insertDate'])
     public insertDate: Date = new Date();

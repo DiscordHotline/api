@@ -1,18 +1,18 @@
 import {apikey} from 'apikeygen';
 import * as bodyParser from 'body-parser';
-import {readdirSync} from 'fs';
 import {Container} from 'inversify';
 import {InversifyExpressServer} from 'inversify-express-utils';
 import * as morgan from 'morgan';
-import {resolve} from 'path';
 import {Connection, createConnection} from 'typeorm';
 import {createLogger, format, Logger, transports} from 'winston';
+import Category from './Entity/Category';
 
 import Consumer from './Entity/Consumer';
 import Report from './Entity/Report';
 import Tag from './Entity/Tag';
 import User from './Entity/User';
 import AbstractManager from './Manager/AbstractManager';
+import CategoryManager from './Manager/CategoryManager';
 import ReportManager from './Manager/ReportManager';
 import TagManager from './Manager/TagManager';
 import UserManager from './Manager/UserManager';
@@ -94,6 +94,7 @@ export default async () => {
             entities:          [
                 Consumer,
                 Report,
+                Category,
                 Tag,
                 User,
             ],
@@ -101,6 +102,9 @@ export default async () => {
         container.bind<Connection>(Types.database).toConstantValue(connection);
         await createRootUser(connection);
 
+        container.bind<AbstractManager<Category>>(Types.manager.entity)
+                 .toDynamicValue((ctx) => new CategoryManager(ctx.container.get(Types.database), Category))
+                 .whenTargetTagged('entity', Category);
         container.bind<AbstractManager<Report>>(Types.manager.entity)
                  .toDynamicValue((ctx) => new ReportManager(ctx.container.get(Types.database), Report))
                  .whenTargetTagged('entity', Report);
@@ -115,6 +119,7 @@ export default async () => {
         container.bind<Authorizer>(Types.authorizer).to(Authorizer);
         setAuthorizorForMiddleware(container.get<Authorizer>(Types.authorizer));
 
+        container.get<Logger>(Types.logger).info('Administrator Permission Bit: %d', PERMISSIONS.ADMINISTRATOR);
         initialized = true;
     }
 

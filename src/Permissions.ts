@@ -27,6 +27,15 @@ export const PERMISSIONS = {
     LIST_TAGS:   1 << 19,
 
     /**
+     * Category Related permissions
+     */
+    READ_CATEGORIES:   1 << 15,
+    WRITE_CATEGORIES:  1 << 16,
+    EDIT_CATEGORIES:   1 << 17,
+    DELETE_CATEGORIES: 1 << 18,
+    LIST_CATEGORIES:   1 << 19,
+
+    /**
      * Miscellaneous Perms
      */
     ADMINISTRATOR: 0, // Calculated Below

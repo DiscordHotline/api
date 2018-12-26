@@ -10,64 +10,45 @@ import {
     requestParam,
     results,
 } from 'inversify-express-utils';
-import {Connection, Repository} from 'typeorm';
+import {Connection} from 'typeorm';
 import {Logger} from 'winston';
 import Category from '../Entity/Category';
-import Tag from '../Entity/Tag';
-import TagManager from '../Manager/TagManager';
+import CategoryManager from '../Manager/CategoryManager';
 import Validate from '../Middleware/Validate';
-import TagModel from '../Model/Body/Tag';
+import CategoryModel from '../Model/Body/Category';
 import {PERMISSIONS} from '../Permissions';
 import {isGranted} from '../Security/Authorizer';
 
 import Types from '../types';
 
 @controller('/tag')
-export class TagController extends BaseHttpController {
-    private categoryRepository: Repository<Category>;
-
+export class CategoryController extends BaseHttpController {
     public constructor(
         @inject(Types.database) private database: Connection,
         @inject(Types.logger) private logger: Logger,
-        @inject(Types.manager.entity) @tagged('entity', Tag) private manager: TagManager,
+        @inject(Types.manager.entity) @tagged('entity', Category) private manager: CategoryManager,
     ) {
         super();
-        this.categoryRepository = database.getRepository<Category>(Category);
     }
 
-    @httpPost('/', isGranted(PERMISSIONS.WRITE_TAGS), Validate(TagModel))
-    private async create(@requestBody() body: TagModel): Promise<results.JsonResult> {
-        return this.json(
-            await this.manager.create(
-                async (x) => {
-                    x.name     = body.name;
-                    x.category = await this.categoryRepository.findOneOrFail(body.category);
-                }),
-            200,
-        );
+    @httpPost('/', isGranted(PERMISSIONS.WRITE_CATEGORIES), Validate(CategoryModel))
+    private async create(@requestBody() body: CategoryModel): Promise<results.JsonResult> {
+        return this.json(await this.manager.create(body), 200);
     }
 
-    @httpGet('/', isGranted(PERMISSIONS.LIST_TAGS))
+    @httpGet('/', isGranted(PERMISSIONS.LIST_CATEGORIES))
     private async list(
         @queryParam('from') from: number = 0,
         @queryParam('size') size: number = 50,
-        @queryParam('category') category?: number,
         @queryParam('name') name?: string,
     ): Promise<results.JsonResult> {
-        const repo = this.database.getRepository<Tag>(Tag);
+        const repo = this.database.getRepository<Category>(Category);
         const qb   = repo.createQueryBuilder('tag')
-                         .innerJoinAndSelect('tag.category', 'category')
                          .skip(from)
                          .take(size || 50)
-                         .orderBy('category.id', 'ASC')
-                         .addOrderBy('tag.id', 'ASC');
-
-        if (category) {
-            qb.where('category.id = :category', {category});
-        }
-
+                         .orderBy('id', 'ASC');
         if (name) {
-            qb.where('tag.name = :name', {name});
+            qb.where('name = :name', {name});
         }
 
         try {
@@ -75,15 +56,15 @@ export class TagController extends BaseHttpController {
 
             return this.json({count, results});
         } catch (e) {
-            this.logger.error('Failed to create a tag list: %O, %s, %j', e, qb.getSql(), qb.getParameters());
+            this.logger.error('Failed to create a tag list: %O', e);
 
             return this.json({message: 'An error has occurred while fetching tags'}, 500);
         }
     }
 
-    @httpGet('/:id', isGranted(PERMISSIONS.READ_TAGS))
+    @httpGet('/:id', isGranted(PERMISSIONS.READ_CATEGORIES))
     private async get(@requestParam('id') id: number): Promise<results.JsonResult> {
-        const repository = this.database.getRepository<Tag>(Tag);
+        const repository = this.database.getRepository<Category>(Category);
         try {
             return this.json(await repository.findOneOrFail(id));
         } catch (e) {
@@ -91,9 +72,9 @@ export class TagController extends BaseHttpController {
         }
     }
 
-    @httpDelete('/:id', isGranted(PERMISSIONS.DELETE_TAGS))
+    @httpDelete('/:id', isGranted(PERMISSIONS.DELETE_CATEGORIES))
     private async delete(@requestParam('id') id: number): Promise<results.StatusCodeResult> {
-        const repository = this.database.getRepository<Tag>(Tag);
+        const repository = this.database.getRepository<Category>(Category);
         const tag        = await repository.findOne(id);
         if (!tag) {
             return this.statusCode(404);
@@ -110,26 +91,17 @@ export class TagController extends BaseHttpController {
         }
     }
 
-    @httpPost('/:id', isGranted(PERMISSIONS.EDIT_TAGS), Validate(TagModel))
+    @httpPost('/:id', isGranted(PERMISSIONS.EDIT_CATEGORIES), Validate(CategoryModel))
     private async edit(
         @requestParam('id') id: number,
-        @requestBody() body: TagModel,
+        @requestBody() body: CategoryModel,
     ): Promise<results.JsonResult | results.StatusCodeResult> {
-        const repository = this.database.getRepository<Tag>(Tag);
+        const repository = this.database.getRepository<Category>(Category);
         const tag        = await repository.findOne(id);
         if (!tag) {
             return this.statusCode(404);
         }
 
-        return this.json(
-            await this.manager.update(
-                tag,
-                async (x) => {
-                    x.name     = body.name;
-                    x.category = await this.categoryRepository.findOneOrFail(body.category);
-                },
-            ),
-            200,
-        );
+        return this.json(await this.manager.update(tag, body), 200);
     }
 }
