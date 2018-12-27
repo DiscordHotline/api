@@ -23,9 +23,6 @@ export default class Report extends BaseEntity {
     public guildId?: string;
 
     @Column({type: 'simple-array'})
-    public messageIds: string[] = [];
-
-    @Column({type: 'simple-array'})
     public links: string[];
 
     @ManyToMany((type) => User, {eager: true})
