@@ -11,7 +11,6 @@ export default class CreateReport extends AbstractModel<CreateReport> {
     public reporter: Snowflake;
 
     @IsInt({each: true})
-    @ArrayMinSize(1)
     public tags: number[];
 
     @IsDefined()

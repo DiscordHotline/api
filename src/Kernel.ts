@@ -9,10 +9,12 @@ import Category from './Entity/Category';
 
 import Consumer from './Entity/Consumer';
 import Report from './Entity/Report';
+import Subscription from './Entity/Subscription';
 import Tag from './Entity/Tag';
 import User from './Entity/User';
 import AbstractManager from './Manager/AbstractManager';
 import CategoryManager from './Manager/CategoryManager';
+import ConsumerManager from './Manager/ConsumerManager';
 import ReportManager from './Manager/ReportManager';
 import TagManager from './Manager/TagManager';
 import UserManager from './Manager/UserManager';
@@ -95,6 +97,7 @@ export default async () => {
                 Consumer,
                 Report,
                 Category,
+                Subscription,
                 Tag,
                 User,
             ],
@@ -105,6 +108,9 @@ export default async () => {
         container.bind<AbstractManager<Category>>(Types.manager.entity)
                  .toDynamicValue((ctx) => new CategoryManager(ctx.container.get(Types.database), Category))
                  .whenTargetTagged('entity', Category);
+        container.bind<AbstractManager<Consumer>>(Types.manager.entity)
+                 .toDynamicValue((ctx) => new ConsumerManager(ctx.container.get(Types.database), Consumer))
+                 .whenTargetTagged('entity', Consumer);
         container.bind<AbstractManager<Report>>(Types.manager.entity)
                  .toDynamicValue((ctx) => new ReportManager(ctx.container.get(Types.database), Report))
                  .whenTargetTagged('entity', Report);

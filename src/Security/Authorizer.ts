@@ -8,6 +8,7 @@ import Types from '../types';
 
 export interface AuthResult {
     passed: boolean;
+    consumer?: Consumer;
     reason?: string;
     code?: number;
 }
@@ -36,11 +37,11 @@ export default class Authorizer {
 
         for (const perm of permissions) {
             if (!hasPermission(perm, consumer.permissions)) {
-                return {passed: false, reason: 'Forbidden', code: 403};
+                return {passed: false, reason: 'Forbidden', code: 403, consumer};
             }
         }
 
-        return {passed: true};
+        return {passed: true, consumer};
     }
 }
 
@@ -49,6 +50,7 @@ export const setAuthorizorForMiddleware = (_authorizer: Authorizer) => authorize
 
 export const isGranted = (...permissions: number[]) => async (req, res, next): Promise<any> => {
     const authResult = await authorizer.isAuthorized(req.get('Authorization'), ...permissions);
+    req.consumer     = authResult.consumer;
     if (authResult.passed) {
         return next();
     }

@@ -5,45 +5,45 @@ import {
     httpDelete,
     httpGet,
     httpPost,
-    queryParam,
+    queryParam, request,
     requestBody,
     requestParam,
     results,
 } from 'inversify-express-utils';
 import {Connection} from 'typeorm';
 import {Logger} from 'winston';
-import Category from '../Entity/Category';
-import CategoryManager from '../Manager/CategoryManager';
+import Consumer from '../Entity/Consumer';
+import ConsumerManager from '../Manager/ConsumerManager';
 import Validate from '../Middleware/Validate';
-import CategoryModel from '../Model/Body/Category';
+import ConsumerModel from '../Model/Body/Consumer';
 import {PERMISSIONS} from '../Permissions';
 import {isGranted} from '../Security/Authorizer';
 
 import Types from '../types';
 
-@controller('/category')
-export class CategoryController extends BaseHttpController {
+@controller('/consumer')
+export class ConsumerController extends BaseHttpController {
     public constructor(
         @inject(Types.database) private database: Connection,
         @inject(Types.logger) private logger: Logger,
-        @inject(Types.manager.entity) @tagged('entity', Category) private manager: CategoryManager,
+        @inject(Types.manager.entity) @tagged('entity', Consumer) private manager: ConsumerManager,
     ) {
         super();
     }
 
-    @httpPost('/', isGranted(PERMISSIONS.WRITE_CATEGORIES), Validate(CategoryModel))
-    private async create(@requestBody() body: CategoryModel): Promise<results.JsonResult> {
+    @httpPost('/', isGranted(PERMISSIONS.WRITE_CONSUMERS), Validate(ConsumerModel))
+    private async create(@request() req: Request, @requestBody() body: ConsumerModel): Promise<results.JsonResult> {
         return this.json(await this.manager.create(body), 200);
     }
 
-    @httpGet('/', isGranted(PERMISSIONS.LIST_CATEGORIES))
+    @httpGet('/', isGranted(PERMISSIONS.LIST_CONSUMERS))
     private async list(
         @queryParam('from') from: number = 0,
         @queryParam('size') size: number = 50,
         @queryParam('name') name?: string,
     ): Promise<results.JsonResult> {
-        const repo = this.database.getRepository<Category>(Category);
-        const qb   = repo.createQueryBuilder('category')
+        const repo = this.database.getRepository<Consumer>(Consumer);
+        const qb   = repo.createQueryBuilder('consumer')
                          .skip(from)
                          .take(size || 50)
                          .orderBy('id', 'ASC');
@@ -56,15 +56,15 @@ export class CategoryController extends BaseHttpController {
 
             return this.json({count, results});
         } catch (e) {
-            this.logger.error('Failed to create a category list: %O', e);
+            this.logger.error('Failed to create a consumer list: %O', e);
 
-            return this.json({message: 'An error has occurred while fetching categorys'}, 500);
+            return this.json({message: 'An error has occurred while fetching consumers'}, 500);
         }
     }
 
-    @httpGet('/:id', isGranted(PERMISSIONS.READ_CATEGORIES))
+    @httpGet('/:id', isGranted(PERMISSIONS.READ_CONSUMERS))
     private async get(@requestParam('id') id: number): Promise<results.JsonResult> {
-        const repository = this.database.getRepository<Category>(Category);
+        const repository = this.database.getRepository<Consumer>(Consumer);
         try {
             return this.json(await repository.findOneOrFail(id));
         } catch (e) {
@@ -72,36 +72,36 @@ export class CategoryController extends BaseHttpController {
         }
     }
 
-    @httpDelete('/:id', isGranted(PERMISSIONS.DELETE_CATEGORIES))
+    @httpDelete('/:id', isGranted(PERMISSIONS.DELETE_CONSUMERS))
     private async delete(@requestParam('id') id: number): Promise<results.StatusCodeResult> {
-        const repository = this.database.getRepository<Category>(Category);
-        const category        = await repository.findOne(id);
-        if (!category) {
+        const repository = this.database.getRepository<Consumer>(Consumer);
+        const consumer        = await repository.findOne(id);
+        if (!consumer) {
             return this.statusCode(404);
         }
 
         try {
-            await category.remove();
+            await consumer.remove();
 
             return this.statusCode(204);
         } catch (e) {
-            this.logger.error(`Failed delete category %d: %O`, id, e);
+            this.logger.error(`Failed delete consumer %d: %O`, id, e);
 
             return this.statusCode(500);
         }
     }
 
-    @httpPost('/:id', isGranted(PERMISSIONS.EDIT_CATEGORIES), Validate(CategoryModel))
+    @httpPost('/:id', isGranted(PERMISSIONS.EDIT_CONSUMERS), Validate(ConsumerModel))
     private async edit(
         @requestParam('id') id: number,
-        @requestBody() body: CategoryModel,
+        @requestBody() body: ConsumerModel,
     ): Promise<results.JsonResult | results.StatusCodeResult> {
-        const repository = this.database.getRepository<Category>(Category);
-        const category        = await repository.findOne(id);
-        if (!category) {
+        const repository = this.database.getRepository<Consumer>(Consumer);
+        const consumer        = await repository.findOne(id);
+        if (!consumer) {
             return this.statusCode(404);
         }
 
-        return this.json(await this.manager.update(category, body), 200);
+        return this.json(await this.manager.update(consumer, body), 200);
     }
 }

@@ -45,6 +45,9 @@ export class ReportController extends BaseHttpController {
 
     @httpPost('/', isGranted(PERMISSIONS.WRITE_REPORTS), Validate(CreateReport))
     private async create(@requestBody() body: CreateReport): Promise<results.JsonResult> {
+        // @todo Add similarity search for reported users
+        // If a majority of the users are already in another report, throw an error
+
         const tagRepo = this.database.getRepository<Tag>(Tag);
         const report  = await this.reportManager.create(async (x) => {
             x.reporter = await this.userManager.findOneByIdOrCreate(body.reporter);
@@ -52,8 +55,10 @@ export class ReportController extends BaseHttpController {
             x.guildId  = body.guildId;
             x.links    = body.links;
 
-            for (const id of body.tags) {
-                x.tags.push(await tagRepo.findOneOrFail(id));
+            if (body.tags) {
+                for (const id of body.tags) {
+                    x.tags.push(await tagRepo.findOneOrFail(id));
+                }
             }
 
             for (const id of body.reportedUsers) {
@@ -147,8 +152,10 @@ export class ReportController extends BaseHttpController {
             x.reason  = body.reason;
             x.guildId = body.guildId;
 
-            for (const tagId of body.tags) {
-                x.tags.push(await tagRepo.findOneOrFail(tagId));
+            if (body.tags) {
+                for (const tagId of body.tags) {
+                    x.tags.push(await tagRepo.findOneOrFail(tagId));
+                }
             }
 
             for (const userId of body.reportedUsers) {

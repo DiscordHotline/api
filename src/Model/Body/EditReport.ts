@@ -5,7 +5,6 @@ type Snowflake = string;
 
 export default class EditReport extends AbstractModel<EditReport> {
     @IsInt({each: true})
-    @ArrayMinSize(1)
     public tags: number[];
 
     @IsDefined()

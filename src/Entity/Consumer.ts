@@ -1,4 +1,5 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {BaseEntity, Column, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import Subscription from './Subscription';
 
 @Entity('consumer')
 export default class Consumer extends BaseEntity {
@@ -16,6 +17,9 @@ export default class Consumer extends BaseEntity {
 
     @Column()
     public permissions: number = 0;
+
+    @OneToMany((type) => Subscription, (subscription) => subscription.consumer)
+    public subscriptions: Subscription[];
 
     @Column({type: 'datetime'}) @Index('insert_date', ['insertDate'])
     public insertDate: Date = new Date();
