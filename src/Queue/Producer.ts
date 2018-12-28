@@ -35,7 +35,13 @@ export default class Queue {
         await this.channel.bindQueue('hotline-reports', 'hotline-reports', 'report');
     }
 
-    public async publish(message: any) {
-        await this.channel.publish('hotline-reports', 'report', Buffer.from(JSON.stringify(message)));
+    public async publish(message: any): Promise<boolean> {
+        try {
+            return this.channel.publish('hotline-reports', 'report', Buffer.from(JSON.stringify(message)));
+        } catch (e) {
+            await this.initialize();
+
+            return this.publish(message);
+        }
     }
 }
