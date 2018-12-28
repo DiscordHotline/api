@@ -13,7 +13,6 @@ export default class CreateReport extends AbstractModel<CreateReport> {
     @IsInt({each: true})
     public tags: number[];
 
-    @IsDefined()
     @Length(10, 512)
     public reason: string;
 

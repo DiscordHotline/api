@@ -50,6 +50,10 @@ export class ReportController extends BaseHttpController {
         // @todo Add similarity search for reported users
         // If a majority of the users are already in another report, throw an error
 
+        if (!body.reason && (!body.tags || body.tags.length === 0)) {
+            return this.json({message: 'Request must have a reason or a tag'}, 400);
+        }
+
         const tagRepo = this.database.getRepository<Tag>(Tag);
         const report  = await this.reportManager.create(async (x) => {
             x.reporter = await this.userManager.findOneByIdOrCreate(body.reporter);
