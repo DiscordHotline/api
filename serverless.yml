@@ -14,6 +14,7 @@ provider:
         VAULT_SECRET_ID: ${opt:vault-secret-id}
 
 plugins:
+    - serverless-plugin-warmup
     - serverless-plugin-typescript
     - serverless-domain-manager
     - serverless-offline
@@ -27,6 +28,7 @@ custom:
 
 functions:
     app:
+        warmup: true
         handler: src/index.handler
         events:
             -   http: ANY /

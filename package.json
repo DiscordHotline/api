@@ -38,6 +38,7 @@
         "serverless-domain-manager": "^2.6.10",
         "serverless-offline": "^3.31.3",
         "serverless-plugin-typescript": "^1.1.5",
+        "serverless-plugin-warmup": "^4.2.0-rc.1",
         "ts-lint": "^4.5.1",
         "ts-node": "^7.0.1",
         "typescript": "^3.2.2",
