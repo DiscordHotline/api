@@ -14,8 +14,8 @@ provider:
         VAULT_SECRET_ID: ${opt:vault-secret-id}
 
 plugins:
-    - serverless-plugin-warmup
     - serverless-plugin-typescript
+    - serverless-plugin-warmup
     - serverless-domain-manager
     - serverless-offline
 
