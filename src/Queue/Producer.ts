@@ -31,9 +31,6 @@ export default class Queue {
             heartbeat: 5,
         });
         this.channel    = await this.connection.createChannel();
-        this.exchange   = await this.channel.assertExchange('hotline-reports', 'direct', {durable: true});
-        this.queue      = await this.channel.assertQueue('hotline-reports', {durable: true});
-        await this.channel.bindQueue('hotline-reports', 'hotline-reports', 'report');
     }
 
     public async publish(message: any): Promise<boolean> {
