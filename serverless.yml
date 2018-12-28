@@ -19,6 +19,9 @@ plugins:
     - serverless-domain-manager
     - serverless-offline
 
+package:
+    individually: true
+
 custom:
     customDomain:
         domainName: api.hotline.gg
