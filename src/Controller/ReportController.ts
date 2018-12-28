@@ -134,7 +134,7 @@ export class ReportController extends BaseHttpController {
 
         try {
             await report.remove();
-            await this.producer.publish({type: 'DELETE_REPORT', data: {id}});
+            await this.producer.publish({type: 'DELETE_REPORT', data: {id, report}});
 
             return this.statusCode(204);
         } catch (e) {
