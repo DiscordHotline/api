@@ -26,6 +26,8 @@ custom:
         certificateName: 'hotline.gg'
         createRoute53Record: false
     webpackIncludeModules:
+        forceInclude:
+            - mysql
         forceExclude:
             - aws-sdk
 functions:
