@@ -10,18 +10,20 @@ export default class CreateReport extends AbstractModel<CreateReport> {
     @Length(16, 22)
     public reporter: Snowflake;
 
+    @IsOptional()
     @IsInt({each: true})
     public tags: number[];
 
+    @IsOptional()
     @Length(10, 512)
     public reason: string;
 
-    @Length(10, 512, {each: true})
     @IsOptional()
+    @Length(10, 512, {each: true})
     public links: string[];
 
-    @Length(15, 19)
     @IsOptional()
+    @Length(15, 19)
     public guildId: Snowflake;
 
     @IsDefined()
