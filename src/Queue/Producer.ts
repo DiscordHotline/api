@@ -53,12 +53,8 @@ export default class Queue {
     }
 
     public async publish(message: any): Promise<boolean> {
-        try {
-            return this.channel.publish('hotline-reports', 'report', Buffer.from(JSON.stringify(message)));
-        } catch (e) {
-            await this.initialize();
+        await this.initialize();
 
-            return this.publish(message);
-        }
+        return this.channel.publish('hotline-reports', 'report', Buffer.from(JSON.stringify(message)));
     }
 }
