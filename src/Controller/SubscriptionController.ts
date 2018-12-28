@@ -64,7 +64,7 @@ export class SubscriptionController extends BaseHttpController {
                          .orderBy('id', 'ASC');
 
         if (tags) {
-            qb.where('tags.name IN(:tags)', {tags: tags.split(',')});
+            qb.where('tags.id IN(:tags)', {tags: tags.split(',')});
         }
 
         try {
