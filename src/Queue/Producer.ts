@@ -23,11 +23,12 @@ export default class Queue {
     @postConstruct()
     public async initialize(): Promise<void> {
         this.connection = await connect({
-            hostname: this.host,
-            port:     parseInt(this.port, 10),
-            username: this.username,
-            password: this.password,
-            vhost:    'hotline',
+            hostname:  this.host,
+            port:      parseInt(this.port, 10),
+            username:  this.username,
+            password:  this.password,
+            vhost:     'hotline',
+            heartbeat: 5,
         });
         this.channel    = await this.connection.createChannel();
         this.exchange   = await this.channel.assertExchange('hotline-reports', 'direct', {durable: true});
