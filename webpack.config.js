@@ -4,20 +4,22 @@ const slsw = require('serverless-webpack');
 module.exports = {
     context: __dirname,
     entry:   slsw.lib.entries,
-    devtool: 'source-map-support',
+    devtool: 'source-map',
+    mode:    'production',
     resolve: {
         extensions: [
             '.js',
             '.jsx',
             '.json',
             '.ts',
-            '.tsx'
-        ]
+            '.tsx',
+        ],
     },
     output:  {
-        libraryTarget: 'commonjs',
-        path:          path.join(__dirname, '.webpack'),
-        filename:      '[name].js',
+        libraryTarget:     'commonjs',
+        path:              path.join(__dirname, '.webpack'),
+        filename:          '[name].js',
+        sourceMapFilename: '[name].map',
     },
     target:  'node',
     module:  {
@@ -25,7 +27,7 @@ module.exports = {
             {
                 test:    /\.ts(x?)$/,
                 loader:  'ts-loader',
-                options: {}
+                options: {},
             },
         ],
     },

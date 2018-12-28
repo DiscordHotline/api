@@ -1,3 +1,6 @@
+import 'reflect-metadata';
+import 'source-map-support/register';
+
 import {apikey} from 'apikeygen';
 import * as bodyParser from 'body-parser';
 import {Container} from 'inversify';
