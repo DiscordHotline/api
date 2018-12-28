@@ -4,7 +4,7 @@ import Subscription from './Subscription';
 @Entity('consumer')
 export default class Consumer extends BaseEntity {
     @PrimaryGeneratedColumn()
-    public id: string;
+    public id: number;
 
     @Column() @Index('name', ['name'])
     public name: string;

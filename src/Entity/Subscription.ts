@@ -24,4 +24,10 @@ export default class Subscription extends BaseEntity {
     @ManyToMany((type) => Tag)
     @JoinTable({name: 'subscription_tags'})
     public tags: Tag[];
+
+    @Column({type: 'text'})
+    public url: string;
+
+    @Column({type: 'int'})
+    public expectedResponseCode: number;
 }
