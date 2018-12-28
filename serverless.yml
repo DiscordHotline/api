@@ -27,6 +27,8 @@ custom:
         createRoute53Record: false
     webpack:
         includeModules:
+            forceInclude:
+                - mysql
             forceExclude:
                 - aws-sdk
 functions:

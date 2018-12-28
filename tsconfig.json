@@ -3,8 +3,6 @@
     "compilerOptions": {
         "target":                       "es2017",
         "module":                       "commonjs",
-        "jsx":                          "preserve",
-        "allowJs":                      true,
         "moduleResolution":             "node",
         "allowSyntheticDefaultImports": true,
         "removeComments":               false,
@@ -14,16 +12,13 @@
         "experimentalDecorators":       true,
         "emitDecoratorMetadata":        true,
         "noImplicitAny":                false,
-        "pretty":                       true,
         "strictNullChecks":             true,
-        "outDir":                       ".build",
-        "rootDir":                      "./",
-        "baseUrl":                      ".",
         "lib":                          [
-            "es2017.object",
-            "es2015",
-            "es2017",
             "esnext",
+            "es2017",
+            "es2015",
+            "es6",
+            "es5",
             "dom"
         ],
         "typeRoots":                    [

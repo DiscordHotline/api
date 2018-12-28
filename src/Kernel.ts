@@ -28,8 +28,6 @@ import {default as Authorizer, setAuthorizorForMiddleware} from './Security/Auth
 import Types from './types';
 import {Config, Vault} from './Vault';
 
-import './Controller';
-
 let initialized          = false;
 let container: Container = new Container({defaultScope: 'Singleton'});
 let server               = new InversifyExpressServer(container);
@@ -60,6 +58,7 @@ async function createRootUser(_conn: Connection) {
 
 export default async () => {
     if (!initialized) {
+        await import('./Controller');
         // Logger
         container.bind<Logger>(Types.logger).toDynamicValue(() => createLogger({
             level:      process.env.DEBUG || false ? 'debug' : 'info',
