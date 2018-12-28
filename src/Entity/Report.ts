@@ -19,6 +19,9 @@ export default class Report extends BaseEntity {
     @Column({type: 'text', nullable: true})
     public reason: string;
 
+    @Column({type: 'tinyint', default: false})
+    public queued: boolean = false;
+
     @Column({type: 'bigint', nullable: true}) @Index('guild', ['guildId'])
     public guildId?: string;
 

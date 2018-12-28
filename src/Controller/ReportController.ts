@@ -73,9 +73,13 @@ export class ReportController extends BaseHttpController {
             for (const id of body.reportedUsers) {
                 x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(id));
             }
-        });
 
-        await this.producer.publish({type: 'NEW_REPORT', data: {report}});
+            try {
+                x.queued = await this.producer.publish({type: 'NEW_REPORT', data: {report: x}});
+            } catch (e) {
+                x.queued = false;
+            }
+        });
 
         return this.json(report, 200);
     }
