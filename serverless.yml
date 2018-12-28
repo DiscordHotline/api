@@ -25,7 +25,9 @@ custom:
         stage: ${self:provider.stage}
         certificateName: 'hotline.gg'
         createRoute53Record: false
-
+    webpackIncludeModules:
+        forceExclude:
+            - aws-sdk
 functions:
     app:
         warmup: true

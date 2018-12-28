@@ -1,5 +1,6 @@
 const path = require('path');
 const slsw = require('serverless-webpack');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
     context: __dirname,
@@ -15,6 +16,7 @@ module.exports = {
             '.tsx',
         ],
     },
+    externals: [nodeExternals()],
     output:  {
         libraryTarget:     'commonjs',
         path:              path.join(__dirname, '.webpack'),
