@@ -61,7 +61,7 @@ export class SubscriptionController extends BaseHttpController {
                          .innerJoinAndSelect('subscription.tags', 'tags')
                          .skip(from)
                          .take(size || 50)
-                         .orderBy('id', 'ASC');
+                         .orderBy('subscription.id', 'ASC');
 
         if (tags) {
             qb.where('tags.id IN(:tags)', {tags: tags.split(',')});
