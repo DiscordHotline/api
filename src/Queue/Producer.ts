@@ -1,5 +1,5 @@
 import {Channel, connect, Connection, Replies} from 'amqplib';
-import {inject, injectable} from 'inversify';
+import {inject, injectable, postConstruct} from 'inversify';
 import Types from '../types';
 
 @injectable()
@@ -20,6 +20,7 @@ export default class Queue {
     ) {
     }
 
+    @postConstruct()
     public async initialize(): Promise<void> {
         this.connection = await connect({
             hostname: this.host,

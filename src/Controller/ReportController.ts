@@ -55,7 +55,10 @@ export class ReportController extends BaseHttpController {
             x.reporter = await this.userManager.findOneByIdOrCreate(body.reporter);
             x.reason   = body.reason;
             x.guildId  = body.guildId;
-            x.links    = body.links;
+
+            if (body.links) {
+                x.links = body.links;
+            }
 
             if (body.tags) {
                 for (const id of body.tags) {
@@ -68,7 +71,7 @@ export class ReportController extends BaseHttpController {
             }
         });
 
-        await this.producer.publish({type: 'NEW_REPORT', data: report});
+        await this.producer.publish({type: 'NEW_REPORT', data: {report}});
 
         return this.json(report, 200);
     }
@@ -131,7 +134,7 @@ export class ReportController extends BaseHttpController {
 
         try {
             await report.remove();
-            await this.producer.publish({type: 'DELETE_REPORT', data: id});
+            await this.producer.publish({type: 'DELETE_REPORT', data: {id}});
 
             return this.statusCode(204);
         } catch (e) {

@@ -30,4 +30,7 @@ export default class Subscription extends BaseEntity {
 
     @Column({type: 'int'})
     public expectedResponseCode: number;
+
+    @Column({type: 'tinyint', default: 0})
+    public discordWebhook: boolean;
 }

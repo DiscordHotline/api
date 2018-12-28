@@ -130,14 +130,12 @@ export default async () => {
         container.bind<Authorizer>(Types.authorizer).to(Authorizer);
         setAuthorizorForMiddleware(container.get<Authorizer>(Types.authorizer));
 
-        const queue = await vault.getSecrets('queue')
+        const queue = await vault.getSecrets('queue');
         container.bind<string>(Types.queue.host).toConstantValue(queue.host);
         container.bind<string>(Types.queue.port).toConstantValue(queue.port);
         container.bind<string>(Types.queue.username).toConstantValue(queue.username);
         container.bind<string>(Types.queue.password).toConstantValue(queue.password);
         container.bind<Producer>(Types.queue.producer).to(Producer);
-
-        await container.get<Producer>(Types.queue.producer).initialize();
 
         container.get<Logger>(Types.logger).info('Administrator Permission Bit: %d', PERMISSIONS.ADMINISTRATOR);
         initialized = true;

@@ -10,6 +10,7 @@ export default class ReportManager extends AbstractManager<Report> {
         instance.tags              = [];
         instance.reportedUsers     = [];
         instance.confirmationUsers = [];
+        instance.links             = [];
 
         return instance;
     }
