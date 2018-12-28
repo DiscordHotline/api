@@ -169,12 +169,14 @@ export class ReportController extends BaseHttpController {
             x.guildId = body.guildId;
 
             if (body.tags) {
+                x.tags = [];
                 for (const tagId of body.tags) {
                     x.tags.push(await tagRepo.findOneOrFail(tagId));
                 }
             }
 
             for (const userId of body.reportedUsers) {
+                x.reportedUsers = [];
                 x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(userId));
             }
 
