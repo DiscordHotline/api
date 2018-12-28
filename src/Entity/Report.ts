@@ -16,7 +16,7 @@ export default class Report extends BaseEntity {
     @JoinTable({name: 'report_tags'})
     public tags: Tag[];
 
-    @Column({type: 'text'})
+    @Column({type: 'text', nullable: true})
     public reason: string;
 
     @Column({type: 'bigint', nullable: true}) @Index('guild', ['guildId'])
