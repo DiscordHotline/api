@@ -22,6 +22,7 @@ import Validate from '../Middleware/Validate';
 import CreateReport from '../Model/Body/CreateReport';
 import EditReport from '../Model/Body/EditReport';
 import {PERMISSIONS} from '../Permissions';
+import Producer from '../Queue/Producer';
 import {ReportCategories} from '../ReportCategory';
 import {isGranted} from '../Security/Authorizer';
 
@@ -32,6 +33,7 @@ export class ReportController extends BaseHttpController {
     public constructor(
         @inject(Types.database) private database: Connection,
         @inject(Types.logger) private logger: Logger,
+        @inject(Types.queue.producer) private producer: Producer,
         @inject(Types.manager.entity) @tagged('entity', Report) private reportManager: ReportManager,
         @inject(Types.manager.entity) @tagged('entity', User) private userManager: UserManager,
     ) {
@@ -65,6 +67,8 @@ export class ReportController extends BaseHttpController {
                 x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(id));
             }
         });
+
+        await this.producer.publish({type: 'NEW_REPORT', data: report});
 
         return this.json(report, 200);
     }
@@ -127,6 +131,7 @@ export class ReportController extends BaseHttpController {
 
         try {
             await report.remove();
+            await this.producer.publish({type: 'DELETE_REPORT', data: id});
 
             return this.statusCode(204);
         } catch (e) {
@@ -162,6 +167,7 @@ export class ReportController extends BaseHttpController {
                 x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(userId));
             }
         });
+        await this.producer.publish({type: 'EDIT_REPORT', data: {id, report}});
 
         return this.json(report, 200);
     }

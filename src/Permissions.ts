@@ -2,7 +2,7 @@ export const PERMISSIONS = {
     /**
      * Report related permissions
      */
-    READ_REPORTS:   1,
+    READ_REPORTS:   1 << 0,
     WRITE_REPORTS:  1 << 1,
     EDIT_REPORTS:   1 << 2,
     DELETE_REPORTS: 1 << 3,
@@ -29,11 +29,20 @@ export const PERMISSIONS = {
     /**
      * Category Related permissions
      */
-    READ_CATEGORIES:   1 << 15,
-    WRITE_CATEGORIES:  1 << 16,
-    EDIT_CATEGORIES:   1 << 17,
-    DELETE_CATEGORIES: 1 << 18,
-    LIST_CATEGORIES:   1 << 19,
+    READ_CATEGORIES:   1 << 20,
+    WRITE_CATEGORIES:  1 << 21,
+    EDIT_CATEGORIES:   1 << 22,
+    DELETE_CATEGORIES: 1 << 23,
+    LIST_CATEGORIES:   1 << 24,
+
+    /**
+     * Subscription Related permissions
+     */
+    READ_SUBSCRIPTIONS:   1 << 25,
+    WRITE_SUBSCRIPTIONS:  1 << 26,
+    EDIT_SUBSCRIPTIONS:   1 << 27,
+    DELETE_SUBSCRIPTIONS: 1 << 28,
+    LIST_SUBSCRIPTIONS:   1 << 29,
 
     /**
      * Miscellaneous Perms
@@ -42,7 +51,7 @@ export const PERMISSIONS = {
 };
 
 export const calculatePermissions = (...permissions) => {
-    let perms = 0x00000000;
+    let perms = 0x0000000;
     for (const perm of permissions) {
         perms = (perms | perm);
     }
@@ -50,6 +59,6 @@ export const calculatePermissions = (...permissions) => {
     return perms;
 };
 
-PERMISSIONS.ADMINISTRATOR = calculatePermissions(...Object.values(PERMISSIONS));
+PERMISSIONS.ADMINISTRATOR = Object.values(PERMISSIONS).reduce((all, p) => all | p, 0);
 
 export const hasPermission = (needle, haystack) => (haystack & needle) === needle;

@@ -32,7 +32,7 @@ export class ConsumerController extends BaseHttpController {
     }
 
     @httpPost('/', isGranted(PERMISSIONS.WRITE_CONSUMERS), Validate(ConsumerModel))
-    private async create(@request() req: Request, @requestBody() body: ConsumerModel): Promise<results.JsonResult> {
+    private async create(@requestBody() body: ConsumerModel): Promise<results.JsonResult> {
         return this.json(await this.manager.create(body), 200);
     }
 

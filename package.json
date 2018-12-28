@@ -6,6 +6,7 @@
     "author": "Aaron Scherer <aequasi@gmail.com",
     "private": true,
     "dependencies": {
+        "amqplib": "^0.5.3",
         "apikeygen": "^1.1.0",
         "body-parser": "^1.18.3",
         "class-validator": "^0.9.1",
@@ -25,12 +26,16 @@
         "winston": "^3.1.0"
     },
     "devDependencies": {
+        "@types/amqplib": "^0.5.9",
+        "@types/body-parser": "^1.17.0",
+        "@types/compression": "^0.0.36",
         "@types/express": "^4.16.0",
+        "@types/morgan": "^1.7.35",
         "@types/mysql": "^2.15.5",
         "@types/node-vault": "^0.5.3",
         "@types/request": "^2.48.1",
         "@types/twig": "^1.12.1",
-        "serverless-domain-manager": "^2.6.7",
+        "serverless-domain-manager": "^2.6.10",
         "serverless-offline": "^3.31.3",
         "serverless-plugin-typescript": "^1.1.5",
         "ts-lint": "^4.5.1",

@@ -16,9 +16,11 @@ import AbstractManager from './Manager/AbstractManager';
 import CategoryManager from './Manager/CategoryManager';
 import ConsumerManager from './Manager/ConsumerManager';
 import ReportManager from './Manager/ReportManager';
+import SubscriptionManager from './Manager/SubscriptionManager';
 import TagManager from './Manager/TagManager';
 import UserManager from './Manager/UserManager';
 import {PERMISSIONS} from './Permissions';
+import Producer from './Queue/Producer';
 import {default as Authorizer, setAuthorizorForMiddleware} from './Security/Authorizer';
 import Types from './types';
 import {Config, Vault} from './Vault';
@@ -117,6 +119,9 @@ export default async () => {
         container.bind<AbstractManager<User>>(Types.manager.entity)
                  .toDynamicValue((ctx) => new UserManager(ctx.container.get(Types.database), User))
                  .whenTargetTagged('entity', User);
+        container.bind<AbstractManager<Subscription>>(Types.manager.entity)
+                 .toDynamicValue((ctx) => new SubscriptionManager(ctx.container.get(Types.database), Subscription))
+                 .whenTargetTagged('entity', Subscription);
         container.bind<AbstractManager<Tag>>(Types.manager.entity)
                  .toDynamicValue((ctx) => new TagManager(ctx.container.get(Types.database), Tag))
                  .whenTargetTagged('entity', Tag);
@@ -124,6 +129,15 @@ export default async () => {
         // Authorizer
         container.bind<Authorizer>(Types.authorizer).to(Authorizer);
         setAuthorizorForMiddleware(container.get<Authorizer>(Types.authorizer));
+
+        const queue = await vault.getSecrets('queue')
+        container.bind<string>(Types.queue.host).toConstantValue(queue.host);
+        container.bind<string>(Types.queue.port).toConstantValue(queue.port);
+        container.bind<string>(Types.queue.username).toConstantValue(queue.username);
+        container.bind<string>(Types.queue.password).toConstantValue(queue.password);
+        container.bind<Producer>(Types.queue.producer).to(Producer);
+
+        await container.get<Producer>(Types.queue.producer).initialize();
 
         container.get<Logger>(Types.logger).info('Administrator Permission Bit: %d', PERMISSIONS.ADMINISTRATOR);
         initialized = true;
