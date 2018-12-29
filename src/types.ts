@@ -17,6 +17,9 @@ const Types = {
         password: Symbol('queue.password'),
         producer: Symbol('queue.producer'),
     },
+    subscriber: {
+        report: Symbol('subscriber.report'),
+    },
     vault:      {
         client: Symbol('vault.client'),
         config: Symbol('vault.config'),

@@ -1,3 +1,6 @@
+import 'reflect-metadata';
+import 'source-map-support/register';
+
 import * as serverless from 'serverless-http';
 import Kernel from './Kernel';
 

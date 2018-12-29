@@ -1,12 +1,9 @@
-import 'reflect-metadata';
-import 'source-map-support/register';
-
 import {apikey} from 'apikeygen';
 import * as bodyParser from 'body-parser';
 import {Container} from 'inversify';
 import {InversifyExpressServer} from 'inversify-express-utils';
 import * as morgan from 'morgan';
-import {Connection, createConnection} from 'typeorm';
+import {Connection, createConnection, EntitySubscriberInterface, EventSubscriber} from 'typeorm';
 import {createLogger, format, Logger, transports} from 'winston';
 import Category from './Entity/Category';
 
@@ -25,6 +22,7 @@ import UserManager from './Manager/UserManager';
 import {PERMISSIONS} from './Permissions';
 import Producer from './Queue/Producer';
 import {default as Authorizer, setAuthorizorForMiddleware} from './Security/Authorizer';
+import {ReportSubscriber} from './Subscriber/ReportSubscriber';
 import Types from './types';
 import {Config, Vault} from './Vault';
 
@@ -86,6 +84,14 @@ export default async () => {
         vault = container.get<Vault>(Types.vault.client);
         await vault.initialize();
 
+        const queue = await vault.getSecrets('queue');
+        container.bind<string>(Types.queue.host).toConstantValue(queue.host);
+        container.bind<string>(Types.queue.port).toConstantValue(queue.port);
+        container.bind<string>(Types.queue.username).toConstantValue(queue.username);
+        container.bind<string>(Types.queue.password).toConstantValue(queue.password);
+        container.bind<Producer>(Types.queue.producer).to(Producer);
+        container.bind<ReportSubscriber>(Types.subscriber.report).to(ReportSubscriber);
+
         // Database/TypeORM
         connection = await createConnection({
             synchronize:       true,
@@ -96,6 +102,7 @@ export default async () => {
             password:          await vault.getSecret('api/database', 'password'),
             type:              'mysql',
             supportBigNumbers: true,
+            logger:            this.logger,
             bigNumberStrings:  true,
             entities:          [
                 Consumer,
@@ -107,6 +114,7 @@ export default async () => {
             ],
         });
         container.bind<Connection>(Types.database).toConstantValue(connection);
+        connection.subscribers.push(container.get<ReportSubscriber>(Types.subscriber.report));
         await createRootUser(connection);
 
         container.bind<AbstractManager<Category>>(Types.manager.entity)
@@ -116,12 +124,7 @@ export default async () => {
                  .toDynamicValue((ctx) => new ConsumerManager(ctx.container.get(Types.database), Consumer))
                  .whenTargetTagged('entity', Consumer);
         container.bind<AbstractManager<Report>>(Types.manager.entity)
-                 .toDynamicValue((ctx) => new ReportManager(
-                     ctx.container.get(Types.database),
-                     Report,
-                     ctx.container.get(Types.vault.client),
-                     ctx.container.get(Types.logger),
-                 ))
+                 .toDynamicValue((ctx) => new ReportManager(ctx.container.get(Types.database), Report))
                  .whenTargetTagged('entity', Report);
         container.bind<AbstractManager<User>>(Types.manager.entity)
                  .toDynamicValue((ctx) => new UserManager(ctx.container.get(Types.database), User))
@@ -136,13 +139,6 @@ export default async () => {
         // Authorizer
         container.bind<Authorizer>(Types.authorizer).to(Authorizer);
         setAuthorizorForMiddleware(container.get<Authorizer>(Types.authorizer));
-
-        const queue = await vault.getSecrets('queue');
-        container.bind<string>(Types.queue.host).toConstantValue(queue.host);
-        container.bind<string>(Types.queue.port).toConstantValue(queue.port);
-        container.bind<string>(Types.queue.username).toConstantValue(queue.username);
-        container.bind<string>(Types.queue.password).toConstantValue(queue.password);
-        container.bind<Producer>(Types.queue.producer).to(Producer);
 
         container.get<Logger>(Types.logger).info('Administrator Permission Bit: %d', PERMISSIONS.ADMINISTRATOR);
         initialized = true;

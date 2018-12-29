@@ -75,13 +75,6 @@ export class ReportController extends BaseHttpController {
             }
         });
 
-        try {
-            report.queued = await this.producer.publish({type: 'NEW_REPORT', data: {report}});
-        } catch (e) {
-            report.queued = false;
-        }
-        await report.save();
-
         return this.json(report, 200);
     }
 
@@ -143,7 +136,6 @@ export class ReportController extends BaseHttpController {
 
         try {
             await report.remove();
-            await this.producer.publish({type: 'DELETE_REPORT', data: {id, report}});
 
             return this.statusCode(204);
         } catch (e) {
@@ -184,15 +176,7 @@ export class ReportController extends BaseHttpController {
                 x.reportedUsers = [];
                 x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(userId));
             }
-
         });
-
-        try {
-            report.queued = await this.producer.publish({type: 'EDIT_REPORT', data: {report, id}});
-        } catch (e) {
-            report.queued = false;
-        }
-        await report.save();
 
         return this.json(report, 200);
     }
