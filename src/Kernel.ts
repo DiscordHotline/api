@@ -116,7 +116,12 @@ export default async () => {
                  .toDynamicValue((ctx) => new ConsumerManager(ctx.container.get(Types.database), Consumer))
                  .whenTargetTagged('entity', Consumer);
         container.bind<AbstractManager<Report>>(Types.manager.entity)
-                 .toDynamicValue((ctx) => new ReportManager(ctx.container.get(Types.database), Report))
+                 .toDynamicValue((ctx) => new ReportManager(
+                     ctx.container.get(Types.database),
+                     Report,
+                     ctx.container.get(Types.vault.client),
+                     ctx.container.get(Types.logger),
+                 ))
                  .whenTargetTagged('entity', Report);
         container.bind<AbstractManager<User>>(Types.manager.entity)
                  .toDynamicValue((ctx) => new UserManager(ctx.container.get(Types.database), User))

@@ -1,5 +1,5 @@
 import {S3} from 'aws-sdk';
-import * as generateName from 'gfycat-style-urls';
+import {generateCombination as generateName} from 'gfycat-style-urls';
 import {inject, injectable} from 'inversify';
 import * as mime from 'mime-types';
 import {Connection} from 'typeorm';
@@ -16,10 +16,10 @@ export default class ReportManager extends AbstractManager<Report> {
     private bucketName: string;
 
     public constructor(
-        @inject(Types.database) database: Connection,
+        @inject(Types.database) protected database: Connection,
+        protected type: new () => Report,
         @inject(Types.vault.client) protected vault: Vault,
         @inject(Types.logger) protected logger: Logger,
-        type: new () => Report,
     ) {
         super(database, type);
     }
@@ -38,7 +38,9 @@ export default class ReportManager extends AbstractManager<Report> {
         if (instance.links.length > 0) {
             for (const index of Object.keys(instance.links)) {
                 try {
-                    instance.links[index] = await this.reuploadImage(instance.links[index]);
+                    if (!/^https:\/\/i\.hotline\.gg\//.test(instance.links[index])) {
+                        instance.links[index] = await this.reuploadImage(instance.links[index]);
+                    }
                 } catch (e) {
                     this.logger.error('Failed to re-upload image: %O', e);
                 }
@@ -60,7 +62,7 @@ export default class ReportManager extends AbstractManager<Report> {
                     return reject(err);
                 }
 
-                const name = `${generateName(4, '-')}.${mime.extension(res.headers['content-type'])}`;
+                const name = `${generateName(3, '-')}.${mime.extension(res.headers['content-type'])}`;
                 s3.putObject(
                     {
                         Bucket:      this.bucketName,
