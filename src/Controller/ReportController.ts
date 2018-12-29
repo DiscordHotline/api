@@ -73,13 +73,14 @@ export class ReportController extends BaseHttpController {
             for (const id of body.reportedUsers) {
                 x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(id));
             }
-
-            try {
-                x.queued = await this.producer.publish({type: 'NEW_REPORT', data: {report: x}});
-            } catch (e) {
-                x.queued = false;
-            }
         });
+
+        try {
+            report.queued = await this.producer.publish({type: 'NEW_REPORT', data: {report}});
+        } catch (e) {
+            report.queued = false;
+        }
+        await report.save();
 
         return this.json(report, 200);
     }
@@ -184,12 +185,14 @@ export class ReportController extends BaseHttpController {
                 x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(userId));
             }
 
-            try {
-                x.queued = await this.producer.publish({type: 'EDIT_REPORT', data: {report: x, id}});
-            } catch (e) {
-                x.queued = false;
-            }
         });
+
+        try {
+            report.queued = await this.producer.publish({type: 'EDIT_REPORT', data: {report, id}});
+        } catch (e) {
+            report.queued = false;
+        }
+        await report.save();
 
         return this.json(report, 200);
     }
