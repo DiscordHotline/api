@@ -1,14 +1,10 @@
-import {Channel, connect, Replies} from 'amqplib';
+import {ConfirmChannel, connect} from 'amqplib';
 import {inject, injectable, postConstruct} from 'inversify';
 import Types from '../types';
 
 @injectable()
 export default class Queue {
-    private channel: Channel;
-
-    private exchange: Replies.AssertExchange;
-
-    private queue: Replies.AssertQueue;
+    private channel: ConfirmChannel;
 
     constructor(
         @inject(Types.queue.host) private host: string,
@@ -18,7 +14,6 @@ export default class Queue {
     ) {
     }
 
-    @postConstruct()
     public async initialize(): Promise<void> {
         const connection = await connect(
             {
@@ -30,12 +25,32 @@ export default class Queue {
             },
         );
 
-        this.channel     = await connection.createChannel();
+        this.channel = await connection.createConfirmChannel();
     }
 
     public async publish(message: any): Promise<boolean> {
-        await this.initialize();
+        return new Promise(async (resolve) => {
+            await this.initialize();
 
-        return this.channel.publish('hotline-reports', 'report', Buffer.from(JSON.stringify(message)));
+            try {
+                this.channel.publish(
+                    'hotline-reports',
+                    'report',
+                    Buffer.from(JSON.stringify(message)),
+                    undefined,
+                    async (err) => {
+                        if (err) {
+                            console.error(err);
+
+                            return this.publish(message).then(resolve);
+                        }
+
+                        resolve(true);
+                    },
+                );
+            } catch (_) {
+                return this.publish(message).then(resolve);
+            }
+        });
     }
 }
