@@ -1,5 +1,16 @@
-import {BaseEntity, Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    BaseEntity,
+    Column,
+    Entity,
+    Index,
+    JoinTable,
+    ManyToMany,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 import ReportCategoryEnum from '../ReportCategory';
+import Confirmation from './Confirmation';
 import Tag from './Tag';
 import User from './User';
 
@@ -32,9 +43,8 @@ export default class Report extends BaseEntity {
     @JoinTable({name: 'reported_users'})
     public reportedUsers: User[];
 
-    @ManyToMany((type) => User, {eager: true})
-    @JoinTable({name: 'confirmation_users'})
-    public confirmationUsers: User[];
+    @OneToMany((type) => Confirmation, (confirmation) => confirmation.report, {eager: true})
+    public confirmations: Confirmation[];
 
     @Column({type: 'datetime'}) @Index('insert_date', ['insertDate'])
     public insertDate: Date = new Date();

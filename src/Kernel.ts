@@ -6,6 +6,7 @@ import * as morgan from 'morgan';
 import {Connection, createConnection, EntitySubscriberInterface, EventSubscriber} from 'typeorm';
 import {createLogger, format, Logger, transports} from 'winston';
 import Category from './Entity/Category';
+import Confirmation from './Entity/Confirmation';
 
 import Consumer from './Entity/Consumer';
 import Report from './Entity/Report';
@@ -105,6 +106,7 @@ export default async () => {
             logger:            this.logger,
             bigNumberStrings:  true,
             entities:          [
+                Confirmation,
                 Consumer,
                 Report,
                 Category,

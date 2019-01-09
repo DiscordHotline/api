@@ -12,6 +12,7 @@ import {
 } from 'inversify-express-utils';
 import {Connection} from 'typeorm';
 import {Logger} from 'winston';
+import Confirmation from '../Entity/Confirmation';
 
 import Report from '../Entity/Report';
 import Tag from '../Entity/Tag';
@@ -19,6 +20,7 @@ import User from '../Entity/User';
 import ReportManager from '../Manager/ReportManager';
 import UserManager from '../Manager/UserManager';
 import Validate from '../Middleware/Validate';
+import ConfirmReport from '../Model/Body/ConfirmReport';
 import CreateReport from '../Model/Body/CreateReport';
 import EditReport from '../Model/Body/EditReport';
 import {PERMISSIONS} from '../Permissions';
@@ -89,7 +91,7 @@ export class ReportController extends BaseHttpController {
         const qb   = repo.createQueryBuilder('report')
                          .innerJoinAndSelect('report.reporter', 'reporter')
                          .leftJoinAndSelect('report.reportedUsers', 'reportedUsers')
-                         .leftJoinAndSelect('report.confirmationUsers', 'confirmationUsers')
+                         .leftJoinAndSelect('report.confirmations', 'confirmations')
                          .leftJoinAndSelect('report.tags', 'tags')
                          .skip(from)
                          .take(size)
@@ -180,5 +182,43 @@ export class ReportController extends BaseHttpController {
         });
 
         return this.json(report, 200);
+    }
+
+    @httpPost('/:id/confirm', isGranted(PERMISSIONS.EDIT_REPORTS), Validate(ConfirmReport))
+    private async confirm(
+        @requestParam('id') id: number,
+        @requestBody() body: ConfirmReport,
+    ): Promise<results.JsonResult> {
+        const reportRepo = this.database.getRepository<Report>(Report);
+        const userRepo   = this.database.getRepository<User>(User);
+        const user       = await userRepo.findOne(body.user);
+        let report       = await reportRepo.findOne(id);
+        if (!report) {
+            return this.json({message: `${!user ? 'User Not Found' : 'Report not found'}`}, 404);
+        }
+
+        const index = report.confirmations.findIndex((confirmation) => confirmation.guild === body.guild);
+        if (body.confirmed && index >= 0) {
+            return this.json({message: 'report already confirmed'}, 400);
+        }
+
+        report = await this.reportManager.update(report, async (x) => {
+            if (!body.confirmed) {
+                if (index >= 0) {
+                    x.confirmations.splice(index, 1);
+                }
+
+                return;
+            }
+
+            const confirmation = new Confirmation();
+            confirmation.guild = body.guild;
+            confirmation.user  = user as User;
+            await confirmation.save();
+
+            x.confirmations.push(confirmation);
+        });
+
+        return this.json(report);
     }
 }
