@@ -21,10 +21,7 @@ export default class Authorizer {
         this.repository = connection.getRepository<Consumer>(Consumer);
     }
 
-    public async isAuthorized(
-        token: string | undefined,
-        ...permissions: number[],
-    ): Promise<AuthResult> {
+    public async isAuthorized(token: string | undefined, ...permissions: number[]): Promise<AuthResult> {
         if (!token) {
             return {passed: false, reason: 'Unauthorized', code: 401};
         }
