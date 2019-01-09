@@ -9,7 +9,7 @@ export default class Confirmation extends BaseEntity {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    @ManyToOne((type) => Report, (report) => report.confirmations, {nullable: false})
+    @ManyToOne((type) => Report, (report) => report.confirmations, {nullable: false, eager: false})
     public report: Report;
 
     @ManyToOne((type) => User, {eager: true, nullable: false})
