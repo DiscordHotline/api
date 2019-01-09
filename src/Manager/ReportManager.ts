@@ -6,11 +6,11 @@ import AbstractManager from './AbstractManager';
 @injectable()
 export default class ReportManager extends AbstractManager<Report> {
     protected createInstance(): Report {
-        const instance             = new Report();
-        instance.tags              = [];
-        instance.reportedUsers     = [];
-        instance.confirmationUsers = [];
-        instance.links             = [];
+        const instance         = new Report();
+        instance.tags          = [];
+        instance.reportedUsers = [];
+        instance.confirmations = [];
+        instance.links         = [];
 
         return instance;
     }
