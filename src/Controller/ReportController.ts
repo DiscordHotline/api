@@ -221,6 +221,8 @@ export class ReportController extends BaseHttpController {
             x.confirmations.push(confirmation);
         });
 
+        report.confirmations.forEach((x) => delete x.report);
+
         return this.json(report);
     }
 }
