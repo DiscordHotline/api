@@ -23,7 +23,7 @@ export default class Authorizer {
 
     public async isAuthorized(
         token: string | undefined,
-        ...permissions: number[]
+        ...permissions: number[],
     ): Promise<AuthResult> {
         if (!token) {
             return {passed: false, reason: 'Unauthorized', code: 401};

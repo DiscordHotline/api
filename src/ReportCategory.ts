@@ -5,7 +5,7 @@ enum ReportCategoryEnum {
     ABUSE,
     TOS_VIOLATION,
     HARASSMENT,
-    OTHER
+    OTHER,
 }
 
 export const ReportCategories: Array<{ id: ReportCategoryEnum, display: string, description: string }> = [
