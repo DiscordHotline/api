@@ -1,13 +1,15 @@
 import {apikey} from 'apikeygen';
 import * as bodyParser from 'body-parser';
+import {Application} from 'express';
+import * as http from 'http';
 import {Container} from 'inversify';
 import {InversifyExpressServer} from 'inversify-express-utils';
 import * as morgan from 'morgan';
-import {Connection, createConnection, EntitySubscriberInterface, EventSubscriber} from 'typeorm';
+import {Connection, createConnection} from 'typeorm';
 import {createLogger, format, Logger, transports} from 'winston';
+
 import Category from './Entity/Category';
 import Confirmation from './Entity/Confirmation';
-
 import Consumer from './Entity/Consumer';
 import Report from './Entity/Report';
 import Subscription from './Entity/Subscription';
@@ -27,18 +29,6 @@ import {ReportSubscriber} from './Subscriber/ReportSubscriber';
 import Types from './types';
 import {Config, Vault} from './Vault';
 
-let initialized          = false;
-let container: Container = new Container({defaultScope: 'Singleton'});
-let server               = new InversifyExpressServer(container);
-let vault: Vault;
-let connection: Connection;
-
-server.setConfig((app) => {
-    app.use(bodyParser.urlencoded({extended: true}));
-    app.use(bodyParser.json());
-    app.use(morgan('dev'));
-});
-
 async function createRootUser(_conn: Connection) {
     const repo       = _conn.getRepository<Consumer>(Consumer);
     let rootConsumer = await repo.findOne({name: 'root'});
@@ -55,11 +45,38 @@ async function createRootUser(_conn: Connection) {
     return rootConsumer.save();
 }
 
-export default async () => {
-    if (!initialized) {
+export default class Kernel {
+    public readonly container: Container = new Container({defaultScope: 'Singleton'});
+
+    private app: Application;
+
+    private vault: Vault;
+
+    private connection: Connection;
+
+    private initialized: Boolean = false;
+
+    public constructor(environment: string, debug: boolean) {
+        this.container.bind<string>(Types.environment).toConstantValue(environment);
+        this.container.bind<boolean>(Types.debug).toConstantValue(debug);
+    }
+
+    public async boot(): Promise<void> {
+        if (this.initialized) {
+            return;
+        }
+
+        const server: InversifyExpressServer = new InversifyExpressServer(this.container);
+
+        server.setConfig((app) => {
+            app.use(bodyParser.urlencoded({extended: true}));
+            app.use(bodyParser.json());
+            app.use(morgan('dev'));
+        });
+
         await import('./Controller');
         // Logger
-        container.bind<Logger>(Types.logger).toDynamicValue(() => createLogger({
+        this.container.bind<Logger>(Types.logger).toDynamicValue(() => createLogger({
             level:      process.env.DEBUG || false ? 'debug' : 'info',
             format:     format.combine(
                 format.splat(),
@@ -74,36 +91,36 @@ export default async () => {
         }));
 
         // Vault
-        container.bind<Config>(Types.vault.config).toConstantValue({
+        this.container.bind<Config>(Types.vault.config).toConstantValue({
             vaultFile: process.env.VAULT_FILE,
             address:   process.env.VAULT_ADDR,
             rootToken: process.env.VAULT_TOKEN,
             roleId:    process.env.VAULT_ROLE_ID,
             secretId:  process.env.VAULT_SECRET_ID,
         });
-        container.bind<Vault>(Types.vault.client).to(Vault);
-        vault = container.get<Vault>(Types.vault.client);
-        await vault.initialize();
+        this.container.bind<Vault>(Types.vault.client).to(Vault);
+        this.vault = this.container.get<Vault>(Types.vault.client);
+        await this.vault.initialize();
 
-        const queue = await vault.getSecrets('queue');
-        container.bind<string>(Types.queue.host).toConstantValue(queue.host);
-        container.bind<string>(Types.queue.port).toConstantValue(queue.port);
-        container.bind<string>(Types.queue.username).toConstantValue(queue.username);
-        container.bind<string>(Types.queue.password).toConstantValue(queue.password);
-        container.bind<Producer>(Types.queue.producer).to(Producer);
-        container.bind<ReportSubscriber>(Types.subscriber.report).to(ReportSubscriber);
+        const queue = await this.vault.getSecrets('queue');
+        this.container.bind<string>(Types.queue.host).toConstantValue(queue.host);
+        this.container.bind<string>(Types.queue.port).toConstantValue(queue.port);
+        this.container.bind<string>(Types.queue.username).toConstantValue(queue.username);
+        this.container.bind<string>(Types.queue.password).toConstantValue(queue.password);
+        this.container.bind<Producer>(Types.queue.producer).to(Producer);
+        this.container.bind<ReportSubscriber>(Types.subscriber.report).to(ReportSubscriber);
 
         // Database/TypeORM
-        connection = await createConnection({
+        // @todo change to async provider
+        this.connection = await createConnection({
             synchronize:       true,
-            host:              await vault.getSecret('database', 'host'),
-            database:          await vault.getSecret('api/database', 'name'),
+            host:              await this.vault.getSecret('database', 'host'),
+            database:          await this.vault.getSecret('api/database', 'name'),
             port:              3306,
-            username:          await vault.getSecret('api/database', 'user'),
-            password:          await vault.getSecret('api/database', 'password'),
+            username:          await this.vault.getSecret('api/database', 'user'),
+            password:          await this.vault.getSecret('api/database', 'password'),
             type:              'mysql',
             supportBigNumbers: true,
-            logger:            this.logger,
             bigNumberStrings:  true,
             entities:          [
                 Confirmation,
@@ -115,36 +132,45 @@ export default async () => {
                 User,
             ],
         });
-        container.bind<Connection>(Types.database).toConstantValue(connection);
-        connection.subscribers.push(container.get<ReportSubscriber>(Types.subscriber.report));
-        await createRootUser(connection);
+        this.container.bind<Connection>(Types.database).toConstantValue(this.connection);
+        this.connection.subscribers.push(this.container.get<ReportSubscriber>(Types.subscriber.report));
+        await createRootUser(this.connection);
 
-        container.bind<AbstractManager<Category>>(Types.manager.entity)
-                 .toDynamicValue((ctx) => new CategoryManager(ctx.container.get(Types.database), Category))
-                 .whenTargetTagged('entity', Category);
-        container.bind<AbstractManager<Consumer>>(Types.manager.entity)
-                 .toDynamicValue((ctx) => new ConsumerManager(ctx.container.get(Types.database), Consumer))
-                 .whenTargetTagged('entity', Consumer);
-        container.bind<AbstractManager<Report>>(Types.manager.entity)
-                 .toDynamicValue((ctx) => new ReportManager(ctx.container.get(Types.database), Report))
-                 .whenTargetTagged('entity', Report);
-        container.bind<AbstractManager<User>>(Types.manager.entity)
-                 .toDynamicValue((ctx) => new UserManager(ctx.container.get(Types.database), User))
-                 .whenTargetTagged('entity', User);
-        container.bind<AbstractManager<Subscription>>(Types.manager.entity)
-                 .toDynamicValue((ctx) => new SubscriptionManager(ctx.container.get(Types.database), Subscription))
-                 .whenTargetTagged('entity', Subscription);
-        container.bind<AbstractManager<Tag>>(Types.manager.entity)
-                 .toDynamicValue((ctx) => new TagManager(ctx.container.get(Types.database), Tag))
-                 .whenTargetTagged('entity', Tag);
+        this.container.bind<AbstractManager<Category>>(Types.manager.entity)
+            .toDynamicValue((ctx) => new CategoryManager(ctx.container.get(Types.database), Category))
+            .whenTargetTagged('entity', Category);
+        this.container.bind<AbstractManager<Consumer>>(Types.manager.entity)
+            .toDynamicValue((ctx) => new ConsumerManager(ctx.container.get(Types.database), Consumer))
+            .whenTargetTagged('entity', Consumer);
+        this.container.bind<AbstractManager<Report>>(Types.manager.entity)
+            .toDynamicValue((ctx) => new ReportManager(ctx.container.get(Types.database), Report))
+            .whenTargetTagged('entity', Report);
+        this.container.bind<AbstractManager<User>>(Types.manager.entity)
+            .toDynamicValue((ctx) => new UserManager(ctx.container.get(Types.database), User))
+            .whenTargetTagged('entity', User);
+        this.container.bind<AbstractManager<Subscription>>(Types.manager.entity)
+            .toDynamicValue((ctx) => new SubscriptionManager(ctx.container.get(Types.database), Subscription))
+            .whenTargetTagged('entity', Subscription);
+        this.container.bind<AbstractManager<Tag>>(Types.manager.entity)
+            .toDynamicValue((ctx) => new TagManager(ctx.container.get(Types.database), Tag))
+            .whenTargetTagged('entity', Tag);
 
         // Authorizer
-        container.bind<Authorizer>(Types.authorizer).to(Authorizer);
-        setAuthorizorForMiddleware(container.get<Authorizer>(Types.authorizer));
+        this.container.bind<Authorizer>(Types.authorizer).to(Authorizer);
+        setAuthorizorForMiddleware(this.container.get<Authorizer>(Types.authorizer));
 
-        container.get<Logger>(Types.logger).info('Administrator Permission Bit: %d', PERMISSIONS.ADMINISTRATOR);
-        initialized = true;
+        this.container.get<Logger>(Types.logger).info('Administrator Permission Bit: %d', PERMISSIONS.ADMINISTRATOR);
+
+        this.app = server.build();
+
+        this.initialized = true;
     }
 
-    return server.build();
-};
+    public async run(): Promise<http.Server> {
+        await this.boot();
+
+        const port = process.env.PORT || 3000;
+
+        return this.app.listen(port, () => console.log(`Listening on http://localhost:${port}`));
+    }
+}

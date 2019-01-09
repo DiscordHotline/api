@@ -43,6 +43,7 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
     }
 
     public async afterUpdate(event: UpdateEvent<Report>): Promise<any> {
+        console.log('Publishing EDIT_REPORT');
         await this.publish('EDIT_REPORT', event.entity);
     }
 

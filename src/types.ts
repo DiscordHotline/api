@@ -1,26 +1,28 @@
 const Types = {
-    authorizer: Symbol('authorizer'),
-    database:   Symbol('database'),
-    discord:    {
+    authorizer:  Symbol('authorizer'),
+    database:    Symbol('database'),
+    debug:       Symbol('debug'),
+    discord:     {
         token:   Symbol('discord.token'),
         options: Symbol('discord.options'),
         client:  Symbol('discord.client'),
     },
-    logger:     Symbol('logger'),
-    manager:    {
+    environment: Symbol('environment'),
+    logger:      Symbol('logger'),
+    manager:     {
         entity: Symbol('manager.entity'),
     },
-    queue:      {
+    queue:       {
         host:     Symbol('queue.host'),
         port:     Symbol('queue.port'),
         username: Symbol('queue.username'),
         password: Symbol('queue.password'),
         producer: Symbol('queue.producer'),
     },
-    subscriber: {
+    subscriber:  {
         report: Symbol('subscriber.report'),
     },
-    vault:      {
+    vault:       {
         client: Symbol('vault.client'),
         config: Symbol('vault.config'),
     },
