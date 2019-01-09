@@ -191,7 +191,7 @@ export class ReportController extends BaseHttpController {
     ): Promise<results.JsonResult> {
         const reportRepo = this.database.getRepository<Report>(Report);
         const userRepo   = this.database.getRepository<User>(User);
-        let user       = await userRepo.findOne(body.user);
+        let user         = await userRepo.findOne(body.user);
         let report       = await reportRepo.findOne(id);
         if (!report) {
             return this.json({message: 'Report not found'}, 404);
@@ -211,9 +211,10 @@ export class ReportController extends BaseHttpController {
                 return;
             }
 
-            const confirmation = new Confirmation();
-            confirmation.guild = body.guild;
-            confirmation.user  = user ? user : await this.userManager.create({id: body.user});
+            const confirmation  = new Confirmation();
+            confirmation.report = x;
+            confirmation.guild  = body.guild;
+            confirmation.user   = user ? user : await this.userManager.create({id: body.user});
             await confirmation.save();
 
             x.confirmations.push(confirmation);
