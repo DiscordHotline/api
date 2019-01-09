@@ -205,7 +205,8 @@ export class ReportController extends BaseHttpController {
         report = await this.reportManager.update(report, async (x) => {
             if (!body.confirmed) {
                 if (index >= 0) {
-                    x.confirmations.splice(index, 1);
+                    const conf = x.confirmations.splice(index, 1)[0];
+                    await conf.remove();
                 }
 
                 return;
