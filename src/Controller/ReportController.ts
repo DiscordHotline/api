@@ -199,7 +199,7 @@ export class ReportController extends BaseHttpController {
 
         const index = report.confirmations.findIndex((confirmation) => confirmation.guild === body.guild);
         if (body.confirmed && index >= 0) {
-            return this.json({message: 'report already confirmed'}, 400);
+            return this.json({message: 'report already confirmed', report}, 400);
         }
 
         report = await this.reportManager.update(report, async (x) => {
@@ -221,8 +221,6 @@ export class ReportController extends BaseHttpController {
             x.confirmations.push(confirmation);
         });
 
-        report.confirmations.forEach((x) => delete x.report);
-
-        return this.json(report);
+        return this.json({report: await reportRepo.findOne(id)});
     }
 }
