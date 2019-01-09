@@ -90,6 +90,7 @@ export class ReportController extends BaseHttpController {
                          .innerJoinAndSelect('report.reporter', 'reporter')
                          .leftJoinAndSelect('report.reportedUsers', 'reportedUsers')
                          .leftJoinAndSelect('report.confirmationUsers', 'confirmationUsers')
+                         .leftJoinAndSelect('report.tags', 'tags')
                          .skip(from)
                          .take(size)
                          .orderBy('report.id', 'DESC');
