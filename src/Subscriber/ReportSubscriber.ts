@@ -91,7 +91,7 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
         try {
             const data: any = {type, data: {id: report.id, report}};
             if (oldReport) {
-                data.oldReport = oldReport;
+                data.data.oldReport = oldReport;
             }
 
             await this.producer.publish(data);
