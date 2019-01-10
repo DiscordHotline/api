@@ -47,6 +47,7 @@ export class ReportController extends BaseHttpController {
         return this.json(ReportCategories, 200);
     }
 
+    @httpPost('/:id/requeue', isGranted(PERMISSIONS.WRITE_REPORTS))
     private async requeue(@requestParam('id') id: number): Promise<results.StatusCodeResult> {
         const report = await this.database.getRepository<Report>(Report).findOne(id);
         if (!report) {
