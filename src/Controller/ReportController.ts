@@ -47,6 +47,17 @@ export class ReportController extends BaseHttpController {
         return this.json(ReportCategories, 200);
     }
 
+    private async requeue(@requestParam('id') id: number): Promise<results.StatusCodeResult> {
+        const report = await this.database.getRepository<Report>(Report).findOne(id);
+        if (!report) {
+            return this.statusCode(404);
+        }
+
+        await this.producer.publish({type: 'EDIT_REPORT', data: {id: report.id, report}});
+
+        return this.statusCode(204);
+    }
+
     @httpPost('/', isGranted(PERMISSIONS.WRITE_REPORTS), Validate(CreateReport))
     private async create(@requestBody() body: CreateReport): Promise<results.JsonResult> {
         // @todo Add similarity search for reported users
