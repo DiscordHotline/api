@@ -5,7 +5,7 @@ import Tag from './Tag';
 import User from './User';
 
 @Entity('confirmation')
-export default class Confirmation extends BaseEntity {
+export default class Confirmation {
     @PrimaryGeneratedColumn()
     public id: number;
 

@@ -2,7 +2,7 @@ import {BaseEntity, Column, Entity, Index, ManyToOne, OneToMany, PrimaryGenerate
 import Subscription from './Subscription';
 
 @Entity('consumer')
-export default class Consumer extends BaseEntity {
+export default class Consumer {
     @PrimaryGeneratedColumn()
     public id: number;
 

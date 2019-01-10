@@ -9,7 +9,7 @@ import {
 import Category from './Category';
 
 @Entity('tag')
-export default class Tag extends BaseEntity {
+export default class Tag {
     @PrimaryGeneratedColumn()
     public id: number;
 

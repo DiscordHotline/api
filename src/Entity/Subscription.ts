@@ -14,7 +14,7 @@ import Consumer from './Consumer';
 import Tag from './Tag';
 
 @Entity('subscription')
-export default class Subscription extends BaseEntity {
+export default class Subscription {
     @PrimaryGeneratedColumn()
     public id: number;
 

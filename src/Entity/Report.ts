@@ -15,7 +15,7 @@ import Tag from './Tag';
 import User from './User';
 
 @Entity('report')
-export default class Report extends BaseEntity {
+export default class Report {
     @PrimaryGeneratedColumn()
     public id: number;
 

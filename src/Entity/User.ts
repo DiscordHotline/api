@@ -2,7 +2,7 @@ import {BaseEntity, Column, Entity, Index, ManyToMany, PrimaryColumn, PrimaryGen
 import Report from './Report';
 
 @Entity('user')
-export default class User extends BaseEntity {
+export default class User {
     @Column({type: 'bigint'}) @Index('user_id', ['UserId'])
     @PrimaryColumn()
     public id: string;

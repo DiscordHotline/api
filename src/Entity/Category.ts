@@ -3,7 +3,7 @@ import {BaseEntity, Column, Entity, Index, JoinTable, OneToMany, PrimaryGenerate
 import Tag from './Tag';
 
 @Entity('category')
-export default class Category extends BaseEntity {
+export default class Category {
     @PrimaryGeneratedColumn()
     public id: number;
 
