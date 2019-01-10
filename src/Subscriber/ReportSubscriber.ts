@@ -91,16 +91,15 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
     }
 
     private async publish(type: PublishType, report: Report | number): Promise<void> {
-        if (report instanceof Report) {
-            try {
-                report.queued = await this.producer.publish({type, data: {id: report.id, report}});
-            } catch (e) {
-                this.logger.error('Failed to queue message: %O', e);
-
-                report.queued = false;
+        try {
+            if (report instanceof Report) {
+                await this.producer.publish({type, data: {id: report.id, report}});
+            } else {
+                await this.producer.publish({type, data: {id: report}});
             }
-        } else {
-            await this.producer.publish({type, data: {id: report}});
+            this.logger.info('Queued report message: %s %s', type, report instanceof Report ? report.id : report);
+        } catch (e) {
+            this.logger.error('Failed to queue message: %O', e);
         }
     }
 }

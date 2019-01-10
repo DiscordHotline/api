@@ -34,6 +34,7 @@ export default class Queue {
         return new Promise(async (resolve, reject) => {
             await this.initialize();
 
+            console.log(stringify(message));
             try {
                 this.channel.publish(
                     'hotline-reports',
