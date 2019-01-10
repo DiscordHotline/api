@@ -42,7 +42,7 @@ async function createRootUser(_conn: Connection) {
     rootConsumer.permissions = PERMISSIONS.ADMINISTRATOR;
     rootConsumer.apiKey      = apikey(64);
 
-    return rootConsumer.save();
+    return repo.save(rootConsumer);
 }
 
 export default class Kernel {

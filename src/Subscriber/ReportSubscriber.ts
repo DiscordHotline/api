@@ -23,7 +23,6 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
         @inject(Types.logger) private logger: Logger,
         @inject(Types.vault.client) private vault: Vault,
     ) {
-        console.log('Subscriber has been created!');
     }
 
     public listenTo() {
@@ -43,7 +42,6 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
     }
 
     public async afterUpdate(event: UpdateEvent<Report>): Promise<any> {
-        console.log('Publishing EDIT_REPORT');
         await this.publish('EDIT_REPORT', event.entity);
     }
 
@@ -77,7 +75,7 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                     return reject(err);
                 }
 
-                const name = `${generateName(3, '-')}.${mime.extension(res.headers['content-type'])}`;
+                const name = `${generateName(3, '-')}.${mime.extension(res.headers['content-type'] as string)}`;
                 s3.putObject(
                     {
                         Bucket:      this.bucketName,

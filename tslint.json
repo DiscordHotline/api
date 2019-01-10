@@ -26,6 +26,7 @@
             "jsx-double",
             "avoid-escape"
         ],
+        "trailing-comma":           true,
         "only-arrow-functions":     false,
         "no-console":               false,
         "no-empty":                 false,

@@ -1,5 +1,7 @@
 import {ConfirmChannel, connect} from 'amqplib';
-import {inject, injectable, postConstruct} from 'inversify';
+import {stringify} from 'flatted';
+import {inject, injectable} from 'inversify';
+
 import Types from '../types';
 
 @injectable()
@@ -28,28 +30,36 @@ export default class Queue {
         this.channel = await connection.createConfirmChannel();
     }
 
-    public async publish(message: any): Promise<boolean> {
-        return new Promise(async (resolve) => {
+    public async publish(message: any, attempt = 0): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
             await this.initialize();
 
             try {
                 this.channel.publish(
                     'hotline-reports',
                     'report',
-                    Buffer.from(JSON.stringify(message)),
+                    Buffer.from(stringify(message)),
                     undefined,
                     async (err) => {
                         if (err) {
-                            console.error(err);
+                            console.error('Failed to publish message', err);
+                            if (attempt < 5) {
+                                return this.publish(message, attempt + 1).then(resolve).catch(reject);
+                            }
 
-                            return this.publish(message).then(resolve);
+                            return reject(err);
                         }
 
                         resolve(true);
                     },
                 );
-            } catch (_) {
-                return this.publish(message).then(resolve);
+            } catch (e) {
+                console.error('Failed to publish message', e);
+                if (attempt < 5) {
+                    return this.publish(message, attempt + 1).then(resolve).catch(reject);
+                }
+
+                reject(e);
             }
         });
     }

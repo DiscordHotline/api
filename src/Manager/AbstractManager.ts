@@ -1,14 +1,17 @@
 import {inject, injectable} from 'inversify';
-import {BaseEntity, Connection, Repository} from 'typeorm';
+import {BaseEntity, Connection, EntityManager, Repository} from 'typeorm';
 
 import Types from '../types';
 
 @injectable()
 export default class AbstractManager<T extends BaseEntity> {
+    protected manager: EntityManager;
+
     protected repository: Repository<T>;
 
     public constructor(@inject(Types.database) protected database: Connection, protected type: new () => T) {
         this.repository = database.getRepository<T>(type);
+        this.manager    = this.repository.manager;
     }
 
     public async create(
@@ -56,13 +59,16 @@ export default class AbstractManager<T extends BaseEntity> {
 
     public async save(instance: T): Promise<T> {
         await this.onBeforeSave(instance);
-        await instance.save();
+        await this.repository.save(instance as any);
         await this.onAfterSave(instance);
 
         return instance;
     }
 
     protected async onBeforeSave(instance: T): Promise<void> {
+        if ((instance as any).updateDate) {
+            (instance as any).updateDate = new Date();
+        }
     }
 
     protected async onAfterSave(instance: T): Promise<void> {
