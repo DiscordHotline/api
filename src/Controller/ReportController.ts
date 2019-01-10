@@ -178,8 +178,13 @@ export class ReportController extends BaseHttpController {
         }
 
         report = await this.reportManager.update(report, async (x) => {
-            x.reason  = body.reason;
-            x.guildId = body.guildId;
+            if (body.reason) {
+                x.reason  = body.reason;
+            }
+
+            if (body.guildId) {
+                x.guildId = body.guildId;
+            }
 
             if (body.tags) {
                 x.tags = [];
@@ -192,9 +197,11 @@ export class ReportController extends BaseHttpController {
                 x.links = body.links;
             }
 
-            for (const userId of body.reportedUsers) {
-                x.reportedUsers = [];
-                x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(userId));
+            if (body.reportedUsers) {
+                for (const userId of body.reportedUsers) {
+                    x.reportedUsers = [];
+                    x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(userId));
+                }
             }
         });
 

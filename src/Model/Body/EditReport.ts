@@ -6,22 +6,22 @@ type Snowflake = string;
 export default class EditReport extends AbstractModel<EditReport> {
     @IsOptional()
     @IsInt({each: true})
-    public tags: number[];
+    public tags?: number[];
 
     @IsOptional()
     @Length(10, 512)
-    public reason: string;
+    public reason?: string;
 
     @IsOptional()
     @Length(10, 512, {each: true})
-    public links: string[];
+    public links?: string[];
 
     @IsOptional()
     @Length(15, 19)
-    public guildId: Snowflake;
+    public guildId?: Snowflake;
 
-    @IsDefined()
+    @IsOptional()
     @Length(15, 19, {each: true})
     @ArrayMinSize(1)
-    public reportedUsers: Snowflake[];
+    public reportedUsers?: Snowflake[];
 }
