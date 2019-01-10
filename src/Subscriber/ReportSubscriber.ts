@@ -45,8 +45,8 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
         await this.publish('EDIT_REPORT', event.entity);
     }
 
-    public async afterRemove(event: RemoveEvent<Report>): Promise<any> {
-        await this.publish('DELETE_REPORT', event.entityId);
+    public async beforeRemove(event: RemoveEvent<Report>): Promise<any> {
+        await this.publish('DELETE_REPORT', event.entity as Report);
     }
 
     private async updateLinks(report: Report): Promise<void> {
@@ -90,14 +90,10 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
         });
     }
 
-    private async publish(type: PublishType, report: Report | number): Promise<void> {
+    private async publish(type: PublishType, report: Report): Promise<void> {
         try {
-            if (report instanceof Report) {
-                await this.producer.publish({type, data: {id: report.id, report}});
-            } else {
-                await this.producer.publish({type, data: {id: report}});
-            }
-            this.logger.info('Queued report message: %s %s', type, report instanceof Report ? report.id : report);
+            await this.producer.publish({type, data: {id: report.id, report}});
+            this.logger.info('Queued report message: %s %s', type, report.id);
         } catch (e) {
             this.logger.error('Failed to queue message: %O', e);
         }

@@ -68,6 +68,11 @@ export class ReportController extends BaseHttpController {
             return this.json({message: 'Request must have a reason or a tag'}, 400);
         }
 
+        const reports = await this.reportManager.getExistingReport(body.reportedUsers);
+        if (true || reports.length > 0) {
+            return this.json({message: 'Matching report already exists.', count: reports.length, reports}, 409);
+        }
+
         const tagRepo = this.database.getRepository<Tag>(Tag);
         const report  = await this.reportManager.create(async (x) => {
             x.reporter = await this.userManager.findOneByIdOrCreate(body.reporter);
