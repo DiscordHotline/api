@@ -128,17 +128,17 @@ export class ReportController extends BaseHttpController {
 
     @httpDelete('/:id', isGranted(PERMISSIONS.DELETE_REPORTS))
     private async delete(@requestParam('id') id: number): Promise<results.StatusCodeResult> {
-        const reportRepository = this.database.getRepository<Report>(Report);
+        const repository = this.database.getRepository<Report>(Report);
         let report: Report;
 
         try {
-            report = await reportRepository.findOneOrFail(id);
+            report = await repository.findOneOrFail(id);
         } catch (e) {
             return this.statusCode(404);
         }
 
         try {
-            await report.remove();
+            await repository.remove(report);
 
             return this.statusCode(204);
         } catch (e) {
@@ -191,6 +191,8 @@ export class ReportController extends BaseHttpController {
     ): Promise<results.JsonResult> {
         const reportRepo = this.database.getRepository<Report>(Report);
         const userRepo   = this.database.getRepository<User>(User);
+        const confRepo   = this.database.getRepository<Confirmation>(Confirmation);
+
         const user       = await userRepo.findOne(body.user);
         let report       = await reportRepo.findOne(id);
         if (!report) {
@@ -206,7 +208,7 @@ export class ReportController extends BaseHttpController {
             if (!body.confirmed) {
                 if (index >= 0) {
                     const conf = x.confirmations.splice(index, 1)[0];
-                    await conf.remove();
+                    await confRepo.remove(conf);
                 }
 
                 return;
@@ -216,7 +218,7 @@ export class ReportController extends BaseHttpController {
             confirmation.report = x;
             confirmation.guild  = body.guild;
             confirmation.user = user ? user : await this.userManager.create({id: body.user});
-            await this.database.getRepository<Confirmation>(Confirmation).save(confirmation);
+            await confRepo.save(confirmation);
 
             x.confirmations.push(confirmation);
         });

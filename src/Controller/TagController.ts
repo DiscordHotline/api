@@ -100,7 +100,7 @@ export class TagController extends BaseHttpController {
         }
 
         try {
-            await tag.remove();
+            await repository.remove(tag);
 
             return this.statusCode(204);
         } catch (e) {

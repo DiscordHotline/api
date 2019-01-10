@@ -1,10 +1,10 @@
 import {inject, injectable} from 'inversify';
-import {BaseEntity, Connection, EntityManager, Repository} from 'typeorm';
+import {Connection, EntityManager, Repository} from 'typeorm';
 
 import Types from '../types';
 
 @injectable()
-export default class AbstractManager<T extends BaseEntity> {
+export default class AbstractManager<T> {
     protected manager: EntityManager;
 
     protected repository: Repository<T>;

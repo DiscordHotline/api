@@ -81,7 +81,7 @@ export class ConsumerController extends BaseHttpController {
         }
 
         try {
-            await consumer.remove();
+            await repository.remove(consumer);
 
             return this.statusCode(204);
         } catch (e) {

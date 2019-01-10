@@ -81,7 +81,7 @@ export class CategoryController extends BaseHttpController {
         }
 
         try {
-            await category.remove();
+            await repository.remove(category);
 
             return this.statusCode(204);
         } catch (e) {
