@@ -81,7 +81,10 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                         ACL:         'public-read',
                         ContentType: res.headers['content-type'],
                     },
-                    () => resolve(`https://i.hotline.gg/${name}`),
+                    (e, data) => {
+                        console.log('Image Upload Result: ', e, data, `https://${this.bucketName}/${name}`);
+                        e ? reject(e) : resolve(`https://i.hotline.gg/${name}`);
+                    },
                 );
             });
         });
