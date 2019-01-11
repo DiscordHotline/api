@@ -61,10 +61,11 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
     }
 
     private async reUploadImage(url: string): Promise<string> {
-        const s3 = new S3();
-        if (!this.bucketName) {
-            this.bucketName = await this.vault.getSecret('api', 'image-bucket-name');
-        }
+        const s3         = new S3({
+            accessKeyId:     await this.vault.getSecret('api', 'aws_access_key'),
+            secretAccessKey: await this.vault.getSecret('api', 'aws_access_secret'),
+        });
+        const bucketName = await this.vault.getSecret('api', 'image-bucket-name');
 
         return new Promise((resolve, reject) => {
             request({url, followRedirect: true, encoding: null}, (err, res, body) => {
@@ -75,14 +76,14 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                 const name = `${generateName(3, '-')}.${mime.extension(res.headers['content-type'] as string)}`;
                 s3.putObject(
                     {
-                        Bucket:      this.bucketName,
+                        Bucket:      bucketName,
                         Key:         name,
                         Body:        body,
                         ACL:         'public-read',
                         ContentType: res.headers['content-type'],
                     },
                     (e, data) => {
-                        console.log('Image Upload Result: ', e, data, `https://${this.bucketName}/${name}`);
+                        console.log('Image Upload Result: ', e, data, `https://${bucketName}/${name}`);
                         e ? reject(e) : resolve(`https://i.hotline.gg/${name}`);
                     },
                 );
