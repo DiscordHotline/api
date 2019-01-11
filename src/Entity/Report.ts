@@ -40,7 +40,7 @@ export default class Report {
     @JoinTable({name: 'reported_users'})
     public reportedUsers: User[];
 
-    @OneToMany((type) => Confirmation, (confirmation) => confirmation.report, {eager: true})
+    @OneToMany((type) => Confirmation, (confirmation) => confirmation.report, {eager: true, cascade: true})
     public confirmations: Confirmation[];
 
     @Column({type: 'datetime'}) @Index('insert_date', ['insertDate'])
