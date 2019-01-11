@@ -74,14 +74,17 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                 }
 
                 const name = `${generateName(3, '-')}.${mime.extension(res.headers['content-type'] as string)}`;
+                const req = {
+                    Bucket:      bucketName,
+                    Key:         name,
+                    Body:        body,
+                    ACL:         'public-read',
+                    ContentType: res.headers['content-type'],
+                };
+                console.log(req);
+
                 s3.putObject(
-                    {
-                        Bucket:      bucketName,
-                        Key:         name,
-                        Body:        body,
-                        ACL:         'public-read',
-                        ContentType: res.headers['content-type'],
-                    },
+                    req,
                     (e, data) => {
                         console.log('Image Upload Result: ', e, data, `https://${bucketName}/${name}`);
                         e ? reject(e) : resolve(`https://i.hotline.gg/${name}`);
