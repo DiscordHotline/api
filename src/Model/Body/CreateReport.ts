@@ -15,7 +15,7 @@ export default class CreateReport extends AbstractModel<CreateReport> {
     public tags: number[];
 
     @IsOptional()
-    @Length(10, 512)
+    @Length(5, 512)
     public reason: string;
 
     @IsOptional()
