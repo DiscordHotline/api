@@ -29,6 +29,7 @@ export default class Vault {
     public async initialize() {
         if (this.config.address && this.config.roleId && this.config.secretId) {
             await this.vault.approleLogin({role_id: this.config.roleId, secret_id: this.config.secretId});
+            setTimeout(this.initialize.bind(this), 5 * 60 * 1000);
         }
     }
 
