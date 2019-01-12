@@ -1,7 +1,7 @@
 import {S3} from 'aws-sdk';
 import {generateCombination as generateName} from 'gfycat-style-urls';
+import * as imageType from 'image-type';
 import {inject, injectable} from 'inversify';
-import * as mime from 'mime-types';
 import * as request from 'request';
 import {EntitySubscriberInterface, EventSubscriber, InsertEvent, RemoveEvent, UpdateEvent} from 'typeorm';
 import {Logger} from 'winston';
@@ -12,6 +12,12 @@ import Types from '../types';
 import {Vault} from '../Vault';
 
 type PublishType = 'NEW_REPORT' | 'EDIT_REPORT' | 'DELETE_REPORT';
+
+/**
+ * @TODO Re-upload text documents to our own s3 solution
+ *
+ * paste.lemonmc.com, pastebin, hastebin, gist, etc
+ */
 
 @EventSubscriber()
 @injectable()
@@ -73,15 +79,22 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                     return reject(err);
                 }
 
-                const name = `${generateName(3, '-')}.${mime.extension(res.headers['content-type'] as string)}`;
+                const type = imageType(body);
+
+                // If this isn't an image, just leave it.
+                if (!type) {
+                    return resolve(url);
+                }
+
+                const name = `${generateName(3, '-')}.${type.ext}`;
                 const req = {
                     Bucket:      bucketName,
                     Key:         name,
                     Body:        body,
                     ACL:         'public-read',
-                    ContentType: res.headers['content-type'],
+                    ContentType: type.mime,
                 };
-                console.log(req);
+                console.log(JSON.stringify(req));
 
                 s3.putObject(
                     req,

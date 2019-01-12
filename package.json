@@ -23,6 +23,7 @@
         "flatted": "^2.0.0",
         "gfycat-style-urls": "^1.0.3",
         "hookcord": "^2.0.0",
+        "image-type": "^3.0.0",
         "inversify": "^5.0.1",
         "inversify-express-utils": "^6.3.2",
         "mime-types": "^2.1.21",
