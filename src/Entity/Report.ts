@@ -19,6 +19,9 @@ export default class Report {
     @PrimaryGeneratedColumn()
     public id: number;
 
+    @Column({type: 'smallint', nullable: true})
+    public legacyId?: number;
+
     @ManyToOne((type) => User, {eager: true})
     @JoinTable()
     public reporter: User;
