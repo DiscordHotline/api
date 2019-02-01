@@ -1,8 +1,8 @@
 import {S3} from 'aws-sdk';
-import {generateCombination as generateName} from 'gfycat-style-urls';
-import * as fileType from 'file-type'
-import {inject, injectable} from 'inversify';
 import axios from 'axios';
+import * as fileType from 'file-type';
+import {generateCombination as generateName} from 'gfycat-style-urls';
+import {inject, injectable} from 'inversify';
 import {EntitySubscriberInterface, EventSubscriber, InsertEvent, RemoveEvent, UpdateEvent} from 'typeorm';
 import {Logger} from 'winston';
 
@@ -12,7 +12,7 @@ import Types from '../types';
 import {Vault} from '../Vault';
 
 type PublishType = 'NEW_REPORT' | 'EDIT_REPORT' | 'DELETE_REPORT';
-const allowedFileTypes = ['gif', 'mp4', 'webp', 'png', 'jpg', 'txt']
+const allowedFileTypes = ['gif', 'mp4', 'webp', 'png', 'jpg', 'txt'];
 
 @EventSubscriber()
 @injectable()
@@ -76,14 +76,15 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                     responseType: 'arraybuffer',
                     // 15MB File size limit
                     maxContentLength: 1000000 * 15
-                })
+                });
 
-                let type = fileType(new Uint8Array(response.data))
+                let type = fileType(new Uint8Array(response.data));
                 if (!type && response.headers['content-type'].includes('text/plain')) {
-                    type = {ext: 'txt', mime: 'text/plain'}
-                    response.data = response.data.toString('utf8')
-                }   if (!allowedFileTypes.includes(type.ext)) {
-                    return resolve(url)
+                    type = {ext: 'txt', mime: 'text/plain'};
+                    response.data = response.data.toString('utf8');
+                }
+                if (!allowedFileTypes.includes(type.ext)) {
+                    return resolve(url);
                 }
 
                 const name = `${generateName(3, '-')}.${type.ext}`;
@@ -103,7 +104,7 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                     },
                 );
             } catch (e) {
-                reject(e)
+                reject(e);
             }
         });
     }
