@@ -1,8 +1,8 @@
 import {S3} from 'aws-sdk';
 import {generateCombination as generateName} from 'gfycat-style-urls';
-import * as imageType from 'image-type';
+import * as fileType from 'file-type'
 import {inject, injectable} from 'inversify';
-import * as request from 'request';
+import axios from 'axios';
 import {EntitySubscriberInterface, EventSubscriber, InsertEvent, RemoveEvent, UpdateEvent} from 'typeorm';
 import {Logger} from 'winston';
 
@@ -12,12 +12,7 @@ import Types from '../types';
 import {Vault} from '../Vault';
 
 type PublishType = 'NEW_REPORT' | 'EDIT_REPORT' | 'DELETE_REPORT';
-
-/**
- * @TODO Re-upload text documents to our own s3 solution
- *
- * paste.lemonmc.com, pastebin, hastebin, gist, etc
- */
+const allowedFileTypes = ['gif', 'mp4', 'webp', 'png', 'jpg', 'txt']
 
 @EventSubscriber()
 @injectable()
@@ -73,28 +68,32 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
         });
         const bucketName = await this.vault.getSecret('api', 'image-bucket-name');
 
-        return new Promise((resolve, reject) => {
-            request({url, followRedirect: true, encoding: null}, (err, res, body) => {
-                if (err) {
-                    return reject(err);
-                }
+        return new Promise(async (resolve, reject) => {
+            try {
+                const response = await axios({
+                    url,
+                    method: 'get',
+                    responseType: 'arraybuffer',
+                    // 15MB File size limit
+                    maxContentLength: 1000000 * 15
+                })
 
-                const type = imageType(body);
-
-                // If this isn't an image, just leave it.
-                if (!type) {
-                    return resolve(url);
+                let type = fileType(new Uint8Array(response.data))
+                if (!type && response.headers['content-type'].includes('text/plain')) {
+                    type = {ext: 'txt', mime: 'text/plain'}
+                    response.data = response.data.toString('utf8')
+                }   if (!allowedFileTypes.includes(type.ext)) {
+                    return resolve(url)
                 }
 
                 const name = `${generateName(3, '-')}.${type.ext}`;
                 const req = {
                     Bucket:      bucketName,
                     Key:         name,
-                    Body:        body,
+                    Body:        response.data,
                     ACL:         'public-read',
-                    ContentType: type.mime,
+                    ContentType: `${type.mime}; charset=utf-8`
                 };
-                console.log(JSON.stringify(req));
 
                 s3.putObject(
                     req,
@@ -103,7 +102,9 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                         e ? reject(e) : resolve(`https://i.hotline.gg/${name}`);
                     },
                 );
-            });
+            } catch (e) {
+                reject(e)
+            }
         });
     }
 
