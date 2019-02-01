@@ -99,7 +99,7 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                     req,
                     (e, data) => {
                         console.log('Image Upload Result: ', e, data, `https://${bucketName}/${name}`);
-                        e ? reject(e) : resolve(`https://i.hotline.gg/${name}`);
+                        e ? reject(e) : resolve(`https://f.hotline.gg/${name}`);
                     },
                 );
             } catch (e) {
