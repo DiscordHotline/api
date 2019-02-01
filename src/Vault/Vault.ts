@@ -76,8 +76,8 @@ export default class Vault {
     }
 
     private async getPath(path: string, cache: boolean = false, ttl: number = 60 * 5) {
-        if (cache && this.paths[path] && this.paths[path].insert + (ttl * 1000) < Date.now()) {
-            return this.paths[path];
+        if (cache && this.paths[path] && this.paths[path].insert + (ttl * 1000) > Date.now()) {
+            return this.paths[path].data;
         }
 
         let value;
