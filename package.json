@@ -1,7 +1,7 @@
 {
-    "name": "@hotline/apply",
+    "name": "@hotline/api",
     "version": "1.0.0",
-    "description": "Application App for Discord Hotline",
+    "description": "API for Discord Hotline",
     "main": "index.js",
     "author": "Aaron Scherer <aequasi@gmail.com",
     "private": true,
