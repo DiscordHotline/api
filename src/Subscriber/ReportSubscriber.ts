@@ -1,6 +1,6 @@
 import {S3} from 'aws-sdk';
 import axios from 'axios';
-import * as fileType from 'file-type';
+import fileType from 'file-type';
 import {generateCombination as generateName} from 'gfycat-style-urls';
 import {inject, injectable} from 'inversify';
 import {EntitySubscriberInterface, EventSubscriber, InsertEvent, RemoveEvent, UpdateEvent} from 'typeorm';
