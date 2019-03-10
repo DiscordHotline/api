@@ -198,8 +198,8 @@ export class ReportController extends BaseHttpController {
             }
 
             if (body.reportedUsers) {
+                x.reportedUsers = [];
                 for (const userId of body.reportedUsers) {
-                    x.reportedUsers = [];
                     x.reportedUsers.push(await this.userManager.findOneByIdOrCreate(userId));
                 }
             }
