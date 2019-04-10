@@ -21,7 +21,7 @@
         "class-validator": "^0.9.1",
         "compression": "^1.7.3",
         "express": "^4.16.4",
-        "file-type": "10.8.0",
+        "file-type": "^10.10.0",
         "flatted": "^2.0.0",
         "gfycat-style-urls": "^1.0.3",
         "hookcord": "^2.0.1",

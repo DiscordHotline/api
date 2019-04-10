@@ -14,6 +14,11 @@ import {Vault} from '../Vault';
 type PublishType = 'NEW_REPORT' | 'EDIT_REPORT' | 'DELETE_REPORT';
 const allowedFileTypes = ['gif', 'mp4', 'webp', 'png', 'jpg', 'txt'];
 
+interface fileTypeInfo {
+    ext: fileType.FileType | string,
+    mime: string
+}
+
 @EventSubscriber()
 @injectable()
 export class ReportSubscriber implements EntitySubscriberInterface<Report> {
@@ -78,22 +83,22 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                     maxContentLength: 1000000 * 15
                 });
 
-                let type = fileType(new Uint8Array(response.data));
+                let type: fileTypeInfo | null = fileType(new Uint8Array(response.data));
                 if (!type && response.headers['content-type'].includes('text/plain')) {
                     type = {ext: 'txt', mime: 'text/plain'};
                     response.data = response.data.toString('utf8');
                 }
-                if (!allowedFileTypes.includes(type.ext)) {
+                if (!allowedFileTypes.includes(type!.ext)) {
                     return resolve(url);
                 }
 
-                const name = `${generateName(3, '-')}.${type.ext}`;
+                const name = `${generateName(3, '-')}.${type!.ext}`;
                 const req = {
                     Bucket:      bucketName,
                     Key:         name,
                     Body:        response.data,
                     ACL:         'public-read',
-                    ContentType: `${type.mime}; charset=utf-8`
+                    ContentType: `${type!.mime}; charset=utf-8`
                 };
 
                 s3.putObject(
