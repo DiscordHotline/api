@@ -14,9 +14,9 @@ import {Vault} from '../Vault';
 type PublishType = 'NEW_REPORT' | 'EDIT_REPORT' | 'DELETE_REPORT';
 const allowedFileTypes = ['gif', 'mp4', 'webp', 'png', 'jpg', 'txt'];
 
-interface fileTypeInfo {
-    ext: fileType.FileType | string,
-    mime: string
+interface FileTypeInfo {
+    ext: fileType.FileType | string;
+    mime: string;
 }
 
 @EventSubscriber()
@@ -83,7 +83,7 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
                     maxContentLength: 1000000 * 15
                 });
 
-                let type: fileTypeInfo | null = fileType(new Uint8Array(response.data));
+                let type: FileTypeInfo | null = fileType(new Uint8Array(response.data));
                 if (!type && response.headers['content-type'].includes('text/plain')) {
                     type = {ext: 'txt', mime: 'text/plain'};
                     response.data = response.data.toString('utf8');
