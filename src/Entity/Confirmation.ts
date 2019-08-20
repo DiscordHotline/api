@@ -15,7 +15,7 @@ export default class Confirmation {
     @ManyToOne((type) => User, {eager: true, nullable: false})
     public user: User;
 
-    @Column({type: 'bigint', unique: true})
+    @Column({type: 'bigint'})
     public guild: string;
 
     @Column({type: 'datetime'}) @Index('insert_date', ['insertDate'])
