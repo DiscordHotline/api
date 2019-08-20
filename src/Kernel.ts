@@ -179,6 +179,8 @@ export default class Kernel {
     public async run(): Promise<http.Server> {
         await this.boot();
 
-        return this.app.listen();
+        const port = process.env.PORT || 3000;
+
+        return this.app.listen(port, () => console.log('Listening on http://localhost:' + port));
     }
 }
