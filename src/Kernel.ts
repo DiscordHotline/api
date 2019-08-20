@@ -1,10 +1,15 @@
+import {Adapter} from '@secretary/aws-secrets-manager-adapter';
+import {Manager} from '@secretary/core';
+import {Adapter as JsonAdapter} from '@secretary/json-file-adapter';
 import {apikey} from 'apikeygen';
+import {SecretsManager} from 'aws-sdk';
 import * as bodyParser from 'body-parser';
 import {Application} from 'express';
 import * as http from 'http';
 import {Container} from 'inversify';
 import {InversifyExpressServer} from 'inversify-express-utils';
 import * as morgan from 'morgan';
+import {resolve} from 'path';
 import {Connection, createConnection} from 'typeorm';
 import {createLogger, format, Logger, transports} from 'winston';
 
@@ -27,7 +32,6 @@ import Producer from './Queue/Producer';
 import {default as Authorizer, setAuthorizorForMiddleware} from './Security/Authorizer';
 import {ReportSubscriber} from './Subscriber/ReportSubscriber';
 import Types from './types';
-import {Config, Vault} from './Vault';
 
 async function createRootUser(_conn: Connection) {
     const repo       = _conn.getRepository<Consumer>(Consumer);
@@ -50,7 +54,7 @@ export default class Kernel {
 
     private app: Application;
 
-    private vault: Vault;
+    private secrets: Manager;
 
     private connection: Connection;
 
@@ -90,35 +94,41 @@ export default class Kernel {
             ],
         }));
 
-        // Vault
-        this.container.bind<Config>(Types.vault.config).toConstantValue({
-            vaultFile: process.env.VAULT_FILE,
-            address:   process.env.VAULT_ADDR,
-            rootToken: process.env.VAULT_TOKEN,
-            roleId:    process.env.VAULT_ROLE_ID,
-            secretId:  process.env.VAULT_SECRET_ID,
-        });
-        this.container.bind<Vault>(Types.vault.client).to(Vault);
-        this.vault = this.container.get<Vault>(Types.vault.client);
-        await this.vault.initialize();
+        // Secretary
+        this.container.bind<Manager>(Types.secrets.manager).toDynamicValue(() => {
+            if (process.env.NOW_REGION === 'dev1') {
+                return new Manager(new JsonAdapter({file: resolve(__dirname, '..', 'dev.secrets.json')}));
+            }
 
-        const queue = await this.vault.getSecrets('queue');
-        this.container.bind<string>(Types.queue.host).toConstantValue(queue.host);
-        this.container.bind<string>(Types.queue.port).toConstantValue(queue.port);
-        this.container.bind<string>(Types.queue.username).toConstantValue(queue.username);
-        this.container.bind<string>(Types.queue.password).toConstantValue(queue.password);
+            return new Manager(new Adapter(new SecretsManager({
+                region:      'us-east-1',
+                credentials: {
+                    accessKeyId:     process.env.SM_AWS_ACCESS_KEY_ID as string,
+                    secretAccessKey: process.env.SM_AWS_SECRET_ACCESS_KEY as string,
+                },
+            })));
+        });
+        this.secrets = this.container.get(Types.secrets.manager);
+
+        const queue = await this.secrets.getSecret('hotline/queue');
+        this.container.bind<string>(Types.queue.host).toConstantValue(queue.value.host);
+        this.container.bind<string>(Types.queue.port).toConstantValue(queue.value.port);
+        this.container.bind<string>(Types.queue.username).toConstantValue(queue.value.username);
+        this.container.bind<string>(Types.queue.password).toConstantValue(queue.value.password);
         this.container.bind<Producer>(Types.queue.producer).to(Producer);
         this.container.bind<ReportSubscriber>(Types.subscriber.report).to(ReportSubscriber);
 
         // Database/TypeORM
         // @todo change to async provider
+        const db        = await this.secrets.getSecret('hotline/database');
+        const apiDb     = await this.secrets.getSecret('hotline/api/database');
         this.connection = await createConnection({
             synchronize:       true,
-            host:              await this.vault.getSecret('database', 'host'),
-            database:          await this.vault.getSecret('api/database', 'name'),
+            host:              db.value.host,
+            database:          apiDb.value.name,
             port:              3306,
-            username:          await this.vault.getSecret('api/database', 'user'),
-            password:          await this.vault.getSecret('api/database', 'password'),
+            username:          apiDb.value.user,
+            password:          apiDb.value.password,
             type:              'mysql',
             supportBigNumbers: true,
             bigNumberStrings:  true,
@@ -169,8 +179,6 @@ export default class Kernel {
     public async run(): Promise<http.Server> {
         await this.boot();
 
-        const port = process.env.PORT || 3000;
-
-        return this.app.listen(port, () => console.log(`Listening on http://localhost:${port}`));
+        return this.app.listen();
     }
 }

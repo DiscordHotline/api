@@ -1,0 +1,16 @@
+{
+    "version": 2,
+    "scope":   "hotline",
+    "name":    "api",
+    "regions": ["all"],
+    "builds":  [
+        {"src": "src/index.ts", "use": "@now/node-server@canary"}
+    ],
+    "env": {
+        "SM_AWS_ACCESS_KEY_ID":     "@api_aws_access_key_id",
+        "SM_AWS_SECRET_ACCESS_KEY": "@api_aws_secret_access_key"
+    },
+    "routes":  [
+        {"src": "/(.*)", "dest": "src/index.ts"}
+    ]
+}

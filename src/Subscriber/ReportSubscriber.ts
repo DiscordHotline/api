@@ -1,3 +1,4 @@
+import {Manager} from '@secretary/core';
 import {S3} from 'aws-sdk';
 import axios from 'axios';
 import fileType from 'file-type';
@@ -9,7 +10,6 @@ import {Logger} from 'winston';
 import Report from '../Entity/Report';
 import Producer from '../Queue/Producer';
 import Types from '../types';
-import {Vault} from '../Vault';
 
 type PublishType = 'NEW_REPORT' | 'EDIT_REPORT' | 'DELETE_REPORT';
 const allowedFileTypes = ['gif', 'mp4', 'webp', 'png', 'jpg', 'txt'];
@@ -22,7 +22,7 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
     public constructor(
         @inject(Types.queue.producer) private producer: Producer,
         @inject(Types.logger) private logger: Logger,
-        @inject(Types.vault.client) private vault: Vault,
+        @inject(Types.secrets.manager) private secrets: Manager,
     ) {
     }
 
@@ -62,11 +62,12 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
     }
 
     private async reUploadImage(url: string): Promise<string> {
-        const s3         = new S3({
-            accessKeyId:     await this.vault.getSecret('api', 'aws_access_key'),
-            secretAccessKey: await this.vault.getSecret('api', 'aws_access_secret'),
+        const secret = await this.secrets.getSecret('hotline/s3');
+        const s3 = new S3({
+            accessKeyId: secret.value.aws_access_key_id,
+            secretAccessKey: secret.value.aws_secret_access_key,
         });
-        const bucketName = await this.vault.getSecret('api', 'image-bucket-name');
+        const bucketName = secret.value.image_bucket_name;
 
         return new Promise(async (resolve, reject) => {
             try {

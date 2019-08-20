@@ -1,5 +1,6 @@
 .serverless
-dev.vault.json
+dev.secrets.json
 start.sh
 .build
 node_modules
+.env

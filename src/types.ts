@@ -22,9 +22,8 @@ const Types = {
     subscriber:  {
         report: Symbol('subscriber.report'),
     },
-    vault:       {
-        client: Symbol('vault.client'),
-        config: Symbol('vault.config'),
+    secrets: {
+        manager: Symbol('secrets.manager'),
     },
 };
 
