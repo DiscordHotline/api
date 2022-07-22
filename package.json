@@ -29,7 +29,7 @@
         "express": "^4.17.1",
         "flatted": "^2.0.1",
         "axios": "^0.18.1",
-        "file-type": "^10.10.0",
+        "file-type": "^16.5.4",
         "gfycat-style-urls": "^1.0.3",
         "hookcord": "^2.0.1",
         "image-type": "^3.1.0",
