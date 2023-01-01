@@ -58,7 +58,7 @@
         "@types/twig": "^1.12.2",
         "nodemon": "^1.19.1",
         "ts-lint": "^4.5.1",
-        "ts-loader": "^5.4.5",
+        "ts-loader": "^9.4.2",
         "ts-node": "^7.0.1",
         "typescript": "^3.5.2"
     }
